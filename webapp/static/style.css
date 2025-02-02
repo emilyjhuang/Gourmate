@@ -1,90 +1,212 @@
-/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-  }
-  
-  body {
+}
+
+body {
     font-family: 'Inter', sans-serif;
     background-color: #f9fafb;
     color: #333;
     line-height: 1.6;
-  }
-  
-  /* Navigation Bar */
-  nav {
-    background-color: #ffffff;
+    margin: 0;
+}
+
+/* Navigation Bar */
+nav {
+    background-color: #9B2D20; 
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 50;
-  }
-  
-  nav a {
-    padding: 0.5rem 1rem;
+    left: 0;
+    width: 100%;
+    z-index: 5;
+    padding: 1.5rem 8%;
+    display: flex;
+    justify-content: space-between; /* Align items to edges */
+    align-items: center;
+}
+
+nav .nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 100%;
+    padding: 0 20px;
+}
+
+nav .logo a {
+    font-size: 30px;
+    font-weight: bold;
+    color: #ffba08; 
     text-decoration: none;
-    color: #4b5563;
+    gap: 3rem;
+    margin-right: 5rem; /* Increased space after logo */
+}
+
+nav .nav-links a {
+    padding: 0.5rem 1rem;
+    position: top;
+    text-decoration: none;
+    color: #ffffff; /* White color for links */
     transition: color 0.3s ease;
-  }
-  
-  nav a:hover {
-    color: #2563eb;
-  }
-  
-  /* Main Heading */
-  main h1 {
+    font-size: 18px;
+}
+
+nav .nav-links {
+    display: flex;
+    justify-content: space-between; /* Adds space between each link */
+    gap: 1rem;  /* More space between navigation items */
+    margin-left: auto;
+}
+
+nav .nav-links a:hover {
+    color: #ffba08; /* Golden color for hover effect */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    nav .nav-links {
+        gap: 1.5rem; /* Reduced gap on smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    nav .nav-links {
+        gap: 1rem;
+    }
+}
+
+
+/* Main Heading */
+main h1 {
     text-align: center;
     color: #1f2937;
     margin-bottom: 2rem;
-  }
-  
-  /* Grid Layout for Cuisine Cards */
-  .grid {
+    font-size: 2.5rem;
+}
+
+/* Grid Layout for Cuisine Cards */
+.grid {
     display: grid;
     gap: 1.5rem;
-  }
-  
-  .cuisine-card {
+    /* Set a fixed number of columns instead of auto-fill */
+    grid-template-columns: repeat(3, 1fr); /* Creates exactly 3 columns */
+    justify-items: center;
+    margin-bottom: 2rem;
+    padding: 20px;
+    max-width: 1200px; /* Optional: adds a max width to prevent cards from stretching too wide */
+    margin-left: auto; /* Optional: centers the grid if max-width is used */
+    margin-right: auto; /* Optional: centers the grid if max-width is used */
+}
+
+/* Rest of your CSS remains the same */
+.cuisine-card {
     background-color: #ffffff;
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
-  }
-  
-  .cuisine-card:hover {
+    width: 100%; /* Ensures cards take full width of their grid cell */
+}
+
+.cuisine-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  }
-  
-  .cuisine-card img {
+}
+
+.cuisine-card img {
     width: 100%;
-    height: 160px;
+    height: 200px;
     object-fit: cover;
-  }
-  
-  .cuisine-card h2 {
+}
+
+.cuisine-card {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+}
+
+.cuisine-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.cuisine-card img {
+    width: 100%;
+    height: 200px; /* Set a consistent height for all images */
+    object-fit: cover;
+}
+
+.cuisine-card h2 {
     font-size: 1.25rem;
     font-weight: 600;
     color: #1f2937;
     text-align: center;
-  }
-  
-  .cuisine-card div {
+}
+
+.cuisine-card div {
     padding: 1rem;
-  }
-  
-  /* Footer */
-  footer {
-    background-color: #ffffff;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+footer {
+    margin-top: auto;  /* Push footer to the bottom */
+    position: center;
+    /*box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);*/
     padding: 1.5rem 0;
     text-align: center;
     color: #6b7280;
     font-size: 0.875rem;
-  }
+}
+
+/* General Styles */
+body {
+    background-color: #f9fafb; /* Light background */
+}
+
+/* Account Page */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f9fafb;
+}
+
+/* Center welcome box */
+.welcome-box {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Center login box */
+.login-box {
+    padding: 20px;
+    border: 3px solid black;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+
 
   /* Account */
 
@@ -298,4 +420,76 @@ button:hover {
 
 .login-link a:hover {
     text-decoration: underline;
+}
+
+
+/* Main content styles */
+.container {
+    display: flex;
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 20px;
+    gap: 2rem;
+}
+
+/* Filters section */
+.filters {
+    flex: 0 0 300px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section {
+    margin-bottom: 1.5rem;
+}
+
+.filter-section h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Map section */
+.map-container {
+    flex: 1;
+    height: 600px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Button styles */
+.apply-filters {
+    background-color: #9B2D20;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    margin-top: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.apply-filters:hover {
+    background-color: #7a241a;
 }

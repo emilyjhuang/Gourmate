@@ -36,8 +36,7 @@ MONGO_DBNAME = os.getenv("MONGO_DBNAME", "Gourmate")
 client = MongoClient(MONGO_URI)  # create MongoDB client
 db = client[MONGO_DBNAME]  # access database
 users_collection = db["users"]  # collection of users
-events_collection = db["events"]  # collection of bars
-budget_collection = db["budget"]
+rests_collection = db["events"]  # collection of bars
 
 # --------ACCOUNT PAGE--------
 @app.route("/account")
@@ -100,23 +99,34 @@ def signup():
         # Hash the password (bcrypt.hashpw returns bytes)
         hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
         users_collection.insert_one({"username": username, "password": hashed_password})
+
         flash("Account created successfully. Please log in.", "success")
+
+        # Redirect to login page after successful signup
         return redirect(url_for("login"))
 
     return render_template("signup.html")
+
 
 
 # --------HOME PAGE--------
 @app.route("/")
 def index():
     if "user_id" not in session:
-        return redirect(url_for("account"))  # direct to login.html
+        return redirect(url_for("login"))  # Redirect to login if the user is not logged in
 
-    # get all bars from current user
+    # Get user ID from the session
     user_id = session.get("user_id")
-    events = events_collection.find({"user_id": user_id})
 
-    return render_template("index.html", events=data['events'], budget=data['budget'], username=session.get("username"))
+    # Fetch restaurant data for the current user from MongoDB
+    restaurants = rests_collection.find({"user_id": user_id})  # Query the restaurant collection
+
+    # Convert the MongoDB cursor to a list for rendering in the template
+    restaurant_list = list(restaurants)  # Convert the cursor to a list
+
+    # Render the template with the restaurant data
+    return render_template("index.html", restaurants=restaurant_list, username=session.get("username"))
+
 
 
 
