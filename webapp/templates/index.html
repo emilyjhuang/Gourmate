@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Restaurant Finder</title>
+  <link href="/static/style.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="#" class="text-2xl font-bold text-blue-600">NYC Restaurant Finder</a>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="#" class="text-gray-700 hover:text-blue-600">Home</a>
+          <a href="#find-restaurants" class="text-gray-700 hover:text-blue-600">Find Restaurants</a>
+          <a href="#my-restaurants" class="text-gray-700 hover:text-blue-600">My Restaurants</a>
+          <a href="#account" class="text-gray-700 hover:text-blue-600">Account</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Cuisine Section -->
+  <main class="py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-8">Explore Cuisines</h1>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Cuisine Cards -->
+      <a href="/italian" class="cuisine-card block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg">
+        <img src="https://via.placeholder.com/300x200?text=Italian+Cuisine" alt="Italian Cuisine" class="w-full h-40 object-cover">
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">Italian</h2>
+        </div>
+      </a>
+
+      <a href="/japanese" class="cuisine-card block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg">
+        <img src="https://via.placeholder.com/300x200?text=Japanese+Cuisine" alt="Japanese Cuisine" class="w-full h-40 object-cover">
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">Japanese</h2>
+        </div>
+      </a>
+
+      <a href="/mexican" class="cuisine-card block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg">
+        <img src="https://via.placeholder.com/300x200?text=Mexican+Cuisine" alt="Mexican Cuisine" class="w-full h-40 object-cover">
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">Mexican</h2>
+        </div>
+      </a>
+
+      <a href="/chinese" class="cuisine-card block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg">
+        <img src="https://via.placeholder.com/300x200?text=Chinese+Cuisine" alt="Chinese Cuisine" class="w-full h-40 object-cover">
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">Chinese</h2>
+        </div>
+      </a>
+
+      <a href="/indian" class="cuisine-card block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg">
+        <img src="https://via.placeholder.com/300x200?text=Indian+Cuisine" alt="Indian Cuisine" class="w-full h-40 object-cover">
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">Indian</h2>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow-md mt-12 py-4">
+    <div class="max-w-7xl mx-auto px-4 text-gray-600 text-center">
+      <p>&copy; 2025 NYC Restaurant Finder. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+
+</html>

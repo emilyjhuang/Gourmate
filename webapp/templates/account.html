@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gourmate</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    </head>
+
+    <body>
+        <!-- ACCOUNT PAGE -->
+        <div class="welcome-box">
+            <h2>Welcome to Gourmate!</h2>
+            <p>Please <a href="/login">login</a> or <a href="/signup">sign up</a>.</p>
+        </div>        
+        <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    </body>
+</html>

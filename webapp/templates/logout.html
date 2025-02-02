@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Specifies the character encoding for the document -->
+    <meta charset="UTF-8">
+    <!-- Sets the title of the page that appears in the browser tab -->
+    <title>Welcome to Gourmate</title>
+    <!-- Links to an external CSS stylesheet for styling the page -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Main header welcoming users to the application -->
+    <h1>Welcome to Gourmate</h1>
+
+    <!-- Links for user navigation -->
+    <!-- Link to the login page -->
+    <a href="{{ url_for('login') }}">Login</a>
+    <!-- Link to the sign-up page -->
+    <a href="{{ url_for('signup') }}">Sign Up</a>
+</body>
+</html>

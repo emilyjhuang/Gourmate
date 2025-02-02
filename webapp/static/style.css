@@ -1,0 +1,301 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  /* Navigation Bar */
+  nav {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  nav a {
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: #4b5563;
+    transition: color 0.3s ease;
+  }
+  
+  nav a:hover {
+    color: #2563eb;
+  }
+  
+  /* Main Heading */
+  main h1 {
+    text-align: center;
+    color: #1f2937;
+    margin-bottom: 2rem;
+  }
+  
+  /* Grid Layout for Cuisine Cards */
+  .grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+  
+  .cuisine-card {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+  }
+  
+  .cuisine-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .cuisine-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+  }
+  
+  .cuisine-card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    text-align: center;
+  }
+  
+  .cuisine-card div {
+    padding: 1rem;
+  }
+  
+  /* Footer */
+  footer {
+    background-color: #ffffff;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem 0;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  /* Account */
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f9fafb;
+    font-family: 'Inter', sans-serif;
+}
+
+.welcome-box {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.welcome-box h2 {
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.welcome-box p {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+.welcome-box a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.welcome-box a:hover {
+    text-decoration: underline;
+}
+
+
+/* login page */
+body {
+    background-color: #9B2D20; /* Deep burgundy color */
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Styling the login box */
+.login-box {
+    padding: 20px;
+    border: 3px solid black; /* Black border around the box */
+    border-radius: 10px;
+    background-color: #fff; /* White background for the box */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 300px; /* Fixed width for the box */
+    text-align: center;
+}
+
+/* Styling the login header */
+.login-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Encircle the text input boxes inside the form */
+input[type="text"], input[type="password"] {
+    padding: 10px;
+    width: 100%;
+    border: 2px solid black; /* Black border around the text input */
+    border-radius: 25px; /* Makes the text input circular */
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+/* Button Style */
+button {
+    background-color: #ffba08; /* Warm golden color */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #e8a400; /* Slightly darker shade for hover effect */
+}
+
+/* Styling for the sign-up link */
+.signup-link {
+    margin-top: 15px;
+}
+
+.signup-link a {
+    color: #ffba08;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+
+
+/* General Styles for the page */
+body {
+    background-color: #9B2D20; /* Deep burgundy color for a warm and elegant background */
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Header Styling */
+.header {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #fff;
+}
+
+#logo {
+    font-size: 30px;
+    margin-right: 10px;
+}
+
+.webName {
+    color: #ffba08;
+    font-size: 28px;
+    text-decoration: none;
+}
+
+.logout-button a {
+    color: #ffba08;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+/* SIGNUP AND LOGIN BOX */
+.signup-container {
+    padding: 20px;
+    background-color: #fff; /* White background for the form */
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+
+/* Heading for the Signup */
+.signup-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #000;
+}
+
+/* Form styling */
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Encircle the text input boxes inside the form */
+input[type="text"], input[type="password"] {
+    padding: 10px;
+    width: 100%;
+    border: 2px solid black; /* Black border around the text input */
+    border-radius: 25px; /* Makes the text input circular */
+    font-size: 16px;
+}
+
+/* Button Styling */
+button {
+    background-color: #ffba08; /* Warm golden color */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #e8a400; /* Slightly darker shade for hover effect */
+}
+
+/* Styling for the link to login */
+.login-link {
+    margin-top: 15px;
+}
+
+.login-link a {
+    color: #ffba08;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
