@@ -25,8 +25,17 @@ pip install -r requirements.txt
 
 
 ```
-
 export FLASK_APP=webapp/app.py 
 
 flask run
+```
+
+fresh environment
+
+```
+rm -rf .venv
+python -m venv .venv
+source .venv/bin/activate  # On Mac/Linux
+pip install -r requirements.txt
+
 ```

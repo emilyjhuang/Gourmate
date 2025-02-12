@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Results</title>
+    <link href="/static/style.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">NYC Restaurant Finder</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="find_rests_page.html">Find Restaurants</a>
+                <a href="myrestaurants.html">My Restaurants</a>
+                <a href="{{ url_for('profile') }}">My Profile</a>
+                <a href="{{ url_for('account') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <h2>Restaurant Locations</h2>
+    <div id="map" style="height: 500px;"></div>
+
+    <!-- Add these meta tags to store the coordinates -->
+    <meta name="restaurant-data" content="{{ restaurants|tojson|safe }}">
+    <meta name="location1" content="{{ location1|tojson|safe }}">
+    <meta name="location2" content="{{ location2|tojson|safe }}">
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    try {
+        // Get the map container
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) {
+            console.error('Map container not found');
+            return;
+        }
+
+        // Get restaurant data from meta tag with error handling
+        let restaurantData, location1, location2;
+        try {
+            const restaurantMeta = document.querySelector('meta[name="restaurant-data"]');
+            const location1Meta = document.querySelector('meta[name="location1"]');
+            const location2Meta = document.querySelector('meta[name="location2"]');
+            
+            if (!restaurantMeta || !location1Meta || !location2Meta) {
+                throw new Error("Required meta tags not found");
+            }
+            
+            restaurantData = JSON.parse(restaurantMeta.content);
+            location1 = JSON.parse(location1Meta.content);
+            location2 = JSON.parse(location2Meta.content);
+        } catch (e) {
+            console.error("Error parsing location data:", e);
+            mapContainer.innerHTML = "Error loading map data. Please try again.";
+            return;
+        }
+
+        // Calculate the midpoint
+        const midLat = (location1.lat + location2.lat) / 2;
+        const midLng = (location2.lng + location2.lng) / 2;
+
+        // Initialize the map
+        const map = L.map('map').setView([midLat, midLng], 14);
+
+        // Add the tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add location markers
+        const location1Marker = L.marker([location1.lat, location1.lng])
+            .bindPopup(`Starting Point: ${location1.name}`)
+            .addTo(map);
+            
+        const location2Marker = L.marker([location2.lat, location2.lng])
+            .bindPopup(`Destination: ${location2.name}`)
+            .addTo(map);
+
+        // Add restaurant markers
+        if (Array.isArray(restaurantData)) {
+            restaurantData.forEach(restaurant => {
+                if (restaurant.lat && restaurant.lon) {
+                    const marker = L.marker([restaurant.lat, restaurant.lon])
+                        .bindPopup(`
+                            <div class="restaurant-popup">
+                                <strong>${restaurant.name || 'Unnamed Restaurant'}</strong>
+                                <br>${restaurant.address || 'No address provided'}
+                                <br>Cuisine: ${restaurant.cuisine || 'Not specified'}
+                                <br>Distance: ${Math.round(restaurant.distance)}m
+                            </div>
+                        `)
+                        .addTo(map);
+
+                    marker.on('mouseover', function (e) {
+                        this.openPopup();
+                    });
+                }
+            });
+        }
+
+        // Fit bounds to show all markers
+        const bounds = L.latLngBounds([
+            [location1.lat, location1.lng],
+            [location2.lat, location2.lng]
+        ]);
+        
+        if (Array.isArray(restaurantData)) {
+            restaurantData.forEach(restaurant => {
+                if (restaurant.lat && restaurant.lon) {
+                    bounds.extend([restaurant.lat, restaurant.lon]);
+                }
+            });
+        }
+        
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } catch (e) {
+        console.error("Error initializing map:", e);
+        mapContainer.innerHTML = "Error loading map. Please try again.";
+    }
+});
+    </script>
+</body>
+</html>

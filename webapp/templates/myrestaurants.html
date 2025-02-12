@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Restaurant Finder</title>
+    <link href="/static/style.css" rel="stylesheet">
+    
+    <!-- Add Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Add Leaflet geocoding plugin -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">NYC Restaurant Finder</a>
+            </div>
+            <div class="nav-links">
+              <a href="{{ url_for('index') }}">Home</a>
+              <a href="{{ url_for('find-restaurants') }}">Find Restaurants</a>
+              <a href="{{ url_for('myrestaurants') }}">My Restaurants</a>
+              <a href="{{ url_for('profile') }}">My Profile</a>
+              <a href="{{ url_for('account') }}">Logout</a>              
+            </div>
+        </div>
+    </nav>
+
+    <div class="myrestaurant-container">
+        <h2> My Saved Restaurants</h2>
+
+
+
+
+    </div>

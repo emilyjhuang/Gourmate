@@ -1,75 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NYC Restaurant Finder</title>
-  <link href="/static/style.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Restaurant Finder</title>
+    <link href="/static/style.css" rel="stylesheet">
+    
+    <!-- Add Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Add Leaflet geocoding plugin -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-
-  <!-- Navigation Bar -->
-  <nav>
-    <div class="nav-container">
-        <div class="logo">
-            <a href="index.html">NYC Restaurant Finder</a>
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">NYC Restaurant Finder</a>
+            </div>
+            <div class="nav-links">
+              <a href="{{ url_for('index') }}">Home</a>
+              <a href="find_rests_page.html">Find Restaurants</a>
+              <a href="myrestaurants.html">My Restaurants</a>
+              <a href="{{ url_for('profile') }}">My Profile</a>
+              <a href="{{ url_for('account') }}">Logout</a>              
+            </div>
         </div>
-        <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="find-restaurants.html">Find Restaurants</a>
-            <a href="my-restaurants.html">My Restaurants</a>
-            <a href="profile.html">My Profile</a>
+    </nav>
+
+    <div class="location-form-container">
+        <h2>Find Restaurants Between Two Locations</h2>
+        <form id="locationForm">
+            <div class="geocoder-container">
+                <input type="text" id="location1" name="location1" placeholder="Enter first location" required>
+                <div id="suggestions1" class="suggestions"></div>
+            </div>
+            <div class="geocoder-container">
+                <input type="text" id="location2" name="location2" placeholder="Enter second location" required>
+                <div id="suggestions2" class="suggestions"></div>
+            </div>
+
+            <label for="price">Select Price Range:</label>
+            <select id="price" name="price">
+                <option value="$">$</option>
+                <option value="$$">$$</option>
+                <option value="$$$">$$$</option>
+            </select>
+
+            <label for="cuisine">Select Cuisine Type:</label>
+            <select id="cuisine" name="cuisine">
+                <option value="american">American</option>
+                <option value="japanese">Japanese</option>
+                <option value="italian">Italian</option>
+                <option value="chinese">Chinese</option>
+                <option value="mexican">Mexican</option>
+                <option value="indian">Indian</option>
+                <option value="thai">Thai</option>
+                <option value="french">French</option>
+            </select>
+
+            <button type="submit">Search</button>
+        </form>
+        
+        <div id="results" style="display: none;">
+            <h3>Restaurant Recommendations:</h3>
+            <ul id="restaurantList"></ul>
         </div>
     </div>
-</nav>
 
-  <!-- Cuisine Section -->
-  <main>
-    <h1>Explore Cuisines</h1>
+    <script>
+      $(document).ready(function () {
+          let selectedLocation1 = null;
+          let selectedLocation2 = null;
+      
+          function debounce(func, wait) {
+              let timeout;
+              return function (...args) {
+                  clearTimeout(timeout);
+                  timeout = setTimeout(() => func.apply(this, args), wait);
+              };
+          }
+      
+          function fetchSuggestions(query, suggestionsDiv, isFirst) {
+              if (query.length < 3) {
+                  suggestionsDiv.innerHTML = '';
+                  return;
+              }
+      
+              $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&q=${query}&addressdetails=1&dedupe=1&limit=5`, function (data) {
+                  suggestionsDiv.innerHTML = '';
+                  if (data.length === 0) {
+                      suggestionsDiv.innerHTML = '<div class="suggestion-item">No results found</div>';
+                      return;
+                  }
+      
+                  data.forEach(result => {
+                      if (result.address && result.address.country_code === "us") {
+                          const div = document.createElement('div');
+                          div.className = 'suggestion-item';
+                          div.textContent = result.display_name;
+                          div.addEventListener('click', () => {
+                              if (isFirst) {
+                                  $('#location1').val(result.display_name);
+                                  selectedLocation1 = {
+                                      name: result.display_name,
+                                      lat: result.lat,
+                                      lon: result.lon
+                                  };
+                              } else {
+                                  $('#location2').val(result.display_name);
+                                  selectedLocation2 = {
+                                      name: result.display_name,
+                                      lat: result.lat,
+                                      lon: result.lon
+                                  };
+                              }
+                              suggestionsDiv.innerHTML = '';
+                          });
+                          suggestionsDiv.appendChild(div);
+                      }
+                  });
+              });
+          }
+      
+          $('#location1').on('input', debounce(function () {
+              fetchSuggestions(this.value, document.getElementById('suggestions1'), true);
+          }, 300));
+      
+          $('#location2').on('input', debounce(function () {
+              fetchSuggestions(this.value, document.getElementById('suggestions2'), false);
+          }, 300));
+      
+          $('#locationForm').submit(function (event) {
+            event.preventDefault();
 
-    <div class="grid">
-      <!-- Cuisine Cards -->
-      <a href="/italian" class="cuisine-card">
-        <img src="https://via.placeholder.com/300x200?text=Italian+Cuisine" alt="Italian Cuisine">
-        <div class="card-info">
-          <h2>Italian</h2>
-        </div>
-      </a>
+            if (!selectedLocation1 || !selectedLocation2) {
+                alert('Please select locations from the suggestions');
+                return;
+            }
 
-      <a href="/japanese" class="cuisine-card">
-        <img src="https://via.placeholder.com/300x200?text=Japanese+Cuisine" alt="Japanese Cuisine">
-        <div class="card-info">
-          <h2>Japanese</h2>
-        </div>
-      </a>
+            $('#results').hide();
 
-      <a href="/mexican" class="cuisine-card">
-        <img src="https://via.placeholder.com/300x200?text=Mexican+Cuisine" alt="Mexican Cuisine">
-        <div class="card-info">
-          <h2>Mexican</h2>
-        </div>
-      </a>
+            const price = $('#price').val();
+            const cuisine = $('#cuisine').val();
 
-      <a href="/chinese" class="cuisine-card">
-        <img src="https://via.placeholder.com/300x200?text=Chinese+Cuisine" alt="Chinese Cuisine">
-        <div class="card-info">
-          <h2>Chinese</h2>
-        </div>
-      </a>
+            $.ajax({
+                type: 'POST',
+                url: '/results',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    location1: selectedLocation1.name,
+                    location2: selectedLocation2.name,
+                    lat1: selectedLocation1.lat,
+                    lng1: selectedLocation1.lon,
+                    lat2: selectedLocation2.lat,
+                    lng2: selectedLocation2.lon,
+                    price: price,
+                    cuisine: cuisine
+                }),
+                success: function (response) {
+                    // Redirect to results page
+                    window.location.href = `/results?mid_lat=${response.mid_lat}&mid_lng=${response.mid_lng}`;
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing your request. Please try again.');
+                },
+            });
+        });
 
-      <a href="/indian" class="cuisine-card">
-        <img src="https://via.placeholder.com/300x200?text=Indian+Cuisine" alt="Indian Cuisine">
-        <div class="card-info">
-          <h2>Indian</h2>
-        </div>
-      </a>
-    </div>
-  </main>
 
-  <!-- Footer -->
-  <footer>
-    <p>&copy; 2025 NYC Restaurant Finder. All rights reserved.</p>
-  </footer>
+      });
+      </script>
+      
 
+    <footer>
+        <p>&copy; 2025 NYC Restaurant Finder. All rights reserved.</p>
+    </footer>
 </body>
 </html>
