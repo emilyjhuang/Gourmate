@@ -211,13 +211,13 @@ def get_restaurants(mid_lat, mid_lng, price=None, cuisine=None, radius=2000):
 
 @app.route("/myrestaurants")
 def my_restaurants():
-    if "user_id" not in session:
-        flash("Please log in to view saved restaurants", "error")
-        return redirect(url_for("login"))
+    if 'user_id' not in session:
+        flash("Please log in to view your saved restaurants.", "error")
+        return redirect(url_for('login'))
 
-    saved = list(db.saved_restaurants.find({"user_id": session["user_id"]}))
+    saved_restaurants = list(db.saved_restaurants.find({"user_id": session['user_id']}))
+    return render_template("myrestaurants.html", saved_restaurants=saved_restaurants)
 
-    return render_template("myrestaurants.html", restaurants=saved)
 
 @app.route("/results", methods=["POST", "GET"])
 def results():

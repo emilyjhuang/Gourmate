@@ -1,57 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Restaurant Finder</title>
-    <link href="/static/style.css" rel="stylesheet">
-    
-    <!-- Add Leaflet CSS and JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Add Leaflet geocoding plugin -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <!-- Navigation Bar -->
-    <nav>
-        <div class="nav-container">
-            <div class="logo">
-                <a href="index.html">NYC Restaurant Finder</a>
-            </div>
-            <div class="nav-links">
-              <a href="{{ url_for('index') }}">Home</a>
-              <a href="{{ url_for('find-restaurants') }}">Find Restaurants</a>
-              <a href="{{ url_for('myrestaurants') }}">My Restaurants</a>
-              <a href="{{ url_for('profile') }}">My Profile</a>
-              <a href="{{ url_for('account') }}">Logout</a>              
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
+{% block content %}
+<div class="container mt-4">
     <h2>My Saved Restaurants</h2>
 
-        {% if restaurants %}
-            {% for r in restaurants %}
-            <div class="restaurant-card">
-                <h4>{{ r.name }}</h4>
-                <p><strong>Address:</strong> {{ r.address }}</p>
-                <p><strong>Cuisine:</strong> {{ r.cuisine }}</p>
-                <p><strong>Price:</strong> {{ r.price }}</p>
-                <p><strong>Rating:</strong> {{ r.rating }}</p>
-
-                <a href="{{ r.url }}" class="btn btn-primary" target="_blank">View on Yelp</a>
-                <a href="https://www.google.com/maps/search/?api=1&query={{ r.address | urlencode }}" class="btn btn-info" target="_blank">
-                    Show on Map
-                </a>
-            </div>
+    {% if saved_restaurants %}
+        <div class="row">
+            {% for rest in saved_restaurants %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ rest.name }}</h5>
+                            <p class="card-text"><strong>Address:</strong> {{ rest.address }}</p>
+                            <p class="card-text"><strong>Cuisine:</strong> {{ rest.cuisine }}</p>
+                            <p class="card-text"><strong>Price:</strong> {{ rest.price }}</p>
+                            <p class="card-text"><strong>Rating:</strong> {{ rest.rating }}</p>
+                            {% if rest.url %}
+                                <a href="{{ rest.url }}" target="_blank" class="btn btn-primary btn-sm">View on Yelp</a>
+                            {% endif %}
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ rest.address | urlencode }}" target="_blank" class="btn btn-secondary btn-sm">Show on Maps</a>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        {% else %}
-            <p>You haven’t saved any restaurants yet.</p>
-        {% endif %}
-
+        </div>
+    {% else %}
+        <p>You have no saved restaurants yet. Start exploring and save some!</p>
+    {% endif %}
+</div>
+{% endblock %}

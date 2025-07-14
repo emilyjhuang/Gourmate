@@ -166,16 +166,19 @@
             });
         
             // Save restaurant functionality
-            $(document).on('click', '.save-restaurant', function () {
-                const button = $(this);
-                const restaurantData = {
-                    name: button.data('name'),
-                    address: button.data('address'),
-                    cuisine: button.data('cuisine'),
-                    price: button.data('price'),
-                    rating: button.data('rating'),
-                    url: button.data('url')
-                };
+            map.on('popupopen', function(e) {
+                const popupContent = e.popup.getElement();
+
+                $(popupContent).find('.save-restaurant').off('click').on('click', function () {
+                    const button = $(this);
+                    const restaurantData = {
+                        name: button.data('name'),
+                        address: button.data('address'),
+                        cuisine: button.data('cuisine'),
+                        price: button.data('price'),
+                        rating: button.data('rating'),
+                        url: button.data('url')
+                    };
         
                 $.ajax({
                     url: '/save-restaurant',
