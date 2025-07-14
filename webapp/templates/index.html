@@ -47,15 +47,17 @@
             </div>
 
             <label for="price">Select Price Range:</label>
-            <select id="price" name="price">
+            <select id="price" name="price[]" multiple>
                 <option value="$">$</option>
                 <option value="$$">$$</option>
                 <option value="$$$">$$$</option>
+                <option value="$$$$">$$$$</option>
             </select>
 
             <label for="cuisine">Select Cuisine Type:</label>
             <select id="cuisine" name="cuisine">
-                <option value="american">American</option>
+                <option value="None">Any</option>
+                <option value="newamerican">American</option>
                 <option value="japanese">Japanese</option>
                 <option value="italian">Italian</option>
                 <option value="chinese">Chinese</option>
@@ -63,6 +65,20 @@
                 <option value="indian">Indian</option>
                 <option value="thai">Thai</option>
                 <option value="french">French</option>
+                <option value="gluten_free">Gluten-Free</option>
+                <option value="vegetarian">Vegetarian</option>
+            </select>
+
+            <label for="radius">Select Search Radius:</label>
+            <select id="radius" name="radius">
+                <option value="2000"> Any Radius</option>
+                <option value="1500"> Less than 1 mile</option>
+                <option value="1600">One Mile</option>
+                <option value="3200">Two Miles</option>
+                <option value="4800">Three Miles</option>
+                <option value="6400">Four Miles</option>
+                <option value="8000">Five Miles</option>
+       
             </select>
 
             <button type="submit">Search</button>
@@ -74,114 +90,127 @@
         </div>
     </div>
 
-    <script>
-      $(document).ready(function () {
-          let selectedLocation1 = null;
-          let selectedLocation2 = null;
-      
-          function debounce(func, wait) {
-              let timeout;
-              return function (...args) {
-                  clearTimeout(timeout);
-                  timeout = setTimeout(() => func.apply(this, args), wait);
-              };
-          }
-      
-          function fetchSuggestions(query, suggestionsDiv, isFirst) {
-              if (query.length < 3) {
-                  suggestionsDiv.innerHTML = '';
-                  return;
-              }
-      
-              $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&q=${query}&addressdetails=1&dedupe=1&limit=5`, function (data) {
-                  suggestionsDiv.innerHTML = '';
-                  if (data.length === 0) {
-                      suggestionsDiv.innerHTML = '<div class="suggestion-item">No results found</div>';
-                      return;
-                  }
-      
-                  data.forEach(result => {
-                      if (result.address && result.address.country_code === "us") {
-                          const div = document.createElement('div');
-                          div.className = 'suggestion-item';
-                          div.textContent = result.display_name;
-                          div.addEventListener('click', () => {
-                              if (isFirst) {
-                                  $('#location1').val(result.display_name);
-                                  selectedLocation1 = {
-                                      name: result.display_name,
-                                      lat: result.lat,
-                                      lon: result.lon
-                                  };
-                              } else {
-                                  $('#location2').val(result.display_name);
-                                  selectedLocation2 = {
-                                      name: result.display_name,
-                                      lat: result.lat,
-                                      lon: result.lon
-                                  };
-                              }
-                              suggestionsDiv.innerHTML = '';
-                          });
-                          suggestionsDiv.appendChild(div);
-                      }
-                  });
-              });
-          }
-      
-          $('#location1').on('input', debounce(function () {
-              fetchSuggestions(this.value, document.getElementById('suggestions1'), true);
-          }, 300));
-      
-          $('#location2').on('input', debounce(function () {
-              fetchSuggestions(this.value, document.getElementById('suggestions2'), false);
-          }, 300));
-      
-          $('#locationForm').submit(function (event) {
-            event.preventDefault();
-
-            if (!selectedLocation1 || !selectedLocation2) {
-                alert('Please select locations from the suggestions');
-                return;
-            }
-
-            $('#results').hide();
-
-            const price = $('#price').val();
-            const cuisine = $('#cuisine').val();
-
-            $.ajax({
-                type: 'POST',
-                url: '/results',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    location1: selectedLocation1.name,
-                    location2: selectedLocation2.name,
-                    lat1: selectedLocation1.lat,
-                    lng1: selectedLocation1.lon,
-                    lat2: selectedLocation2.lat,
-                    lng2: selectedLocation2.lon,
-                    price: price,
-                    cuisine: cuisine
-                }),
-                success: function (response) {
-                    // Redirect to results page
-                    window.location.href = `/results?mid_lat=${response.mid_lat}&mid_lng=${response.mid_lng}`;
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error:', error);
-                    alert('An error occurred while processing your request. Please try again.');
-                },
-            });
-        });
-
-
-      });
-      </script>
-      
-
     <footer>
         <p>&copy; 2025 NYC Restaurant Finder. All rights reserved.</p>
     </footer>
+    
 </body>
+
+<script>
+    $(document).ready(function () {
+        let selectedLocation1 = null;
+        let selectedLocation2 = null;
+    
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+    
+        function fetchSuggestions(query, suggestionsDiv, isFirst) {
+            if (query.length < 3) {
+                suggestionsDiv.innerHTML = '';
+                return;
+            }
+    
+            $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&q=${query}&addressdetails=1&dedupe=1&limit=5`, function (data) {
+                suggestionsDiv.innerHTML = '';
+                if (data.length === 0) {
+                    suggestionsDiv.innerHTML = '<div class="suggestion-item">No results found</div>';
+                    return;
+                }
+    
+                data.forEach(result => {
+                    if (result.address && result.address.country_code === "us") {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.textContent = result.display_name;
+                        div.addEventListener('click', () => {
+                            if (isFirst) {
+                                $('#location1').val(result.display_name);
+                                selectedLocation1 = {
+                                    name: result.display_name,
+                                    lat: result.lat,
+                                    lon: result.lon
+                                };
+                            } else {
+                                $('#location2').val(result.display_name);
+                                selectedLocation2 = {
+                                    name: result.display_name,
+                                    lat: result.lat,
+                                    lon: result.lon
+                                };
+                            }
+                            suggestionsDiv.innerHTML = '';
+                        });
+                        suggestionsDiv.appendChild(div);
+                    }
+                });
+            });
+        }
+    
+        $('#location1').on('input', debounce(function () {
+            fetchSuggestions(this.value, document.getElementById('suggestions1'), true);
+        }, 300));
+    
+        $('#location2').on('input', debounce(function () {
+            fetchSuggestions(this.value, document.getElementById('suggestions2'), false);
+        }, 300));
+    
+        $('#locationForm').submit(function (event) {
+          event.preventDefault();
+
+        if (!selectedLocation1 || !selectedLocation2) {
+            alert('Please select locations from the suggestions');
+            return;
+        }
+
+        $('#results').hide();
+
+       //const price = $('#price').val();
+        
+        const priceMap = { "$": "1", "$$": "2", "$$$": "3", "$$$$": "4" };
+        const selectedPrices = Array.from(document.getElementById("price").selectedOptions)
+            .map(opt => priceMap[opt.value])
+            .join(",");
+            
+        const cuisine = $('#cuisine').val();
+        const radius = $('#radius').val();
+
+   
+        $.ajax({
+              type: 'POST',
+              url: '/results',
+              contentType: 'application/json',
+              data: JSON.stringify({
+                  location1: selectedLocation1.name,
+                  location2: selectedLocation2.name,
+                  lat1: selectedLocation1.lat,
+                  lng1: selectedLocation1.lon,
+                  lat2: selectedLocation2.lat,
+                  lng2: selectedLocation2.lon,
+                  price: selectedPrices,
+                  cuisine: cuisine,
+                  radius: radius
+              }),
+              success: function (response) {
+                  if (response.success) {
+                      // Use the redirect URL from the response
+                      window.location.href = response.redirect_url;
+                  } else {
+                      alert('Error: ' + (response.error || 'Unknown error occurred'));
+                  }
+              },
+              error: function (xhr, status, error) {
+                  console.error('Error:', error);
+                  alert('An error occurred while processing your request. Please try again.');
+              },
+          });
+      });
+
+
+    });
+    </script>
 </html>

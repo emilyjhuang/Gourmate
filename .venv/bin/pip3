@@ -1,4 +1,4 @@
-#!/Users/EmilyHuang/Gourmate/.venv/bin/python
+#!/Users/EmilyHuang/Gourmate/.venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys

@@ -32,11 +32,14 @@ app = Flask(__name__)
 app.secret_key = "this_is_my_random_secret_key_987654321"
 MONGO_URI = os.getenv(
     "MONGO_URI",
-    "mongodb+srv://huangemily449:gourmate101@cluster0.yja9n.mongodb.net/Gourmate?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true"
+    "mongodb+srv://huangemily449:huangemily449@cluster0.yja9n.mongodb.net/cluster0?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true"
 )
 
 MONGO_DBNAME = os.getenv("MONGO_DBNAME", "Gourmate")
 
+#yelp
+
+YELP_API_Key = os.getenv('YELP_API_Key')
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)  # create MongoDB client
 db = client[MONGO_DBNAME]  # access database
@@ -123,6 +126,7 @@ def index():
             lat2, lng2 = data.get("lat2"), data.get("lng2")
             price = data.get("price")
             cuisine = data.get("cuisine")
+            radius = int(data.get("radius", 2000))
 
             if not all([lat1, lng1, lat2, lng2]):
                 return jsonify({"error": "Invalid locations"}), 400
@@ -131,7 +135,9 @@ def index():
             mid_lat, mid_lng = (float(lat1) + float(lat2)) / 2, (float(lng1) + float(lng2)) / 2
 
             # Fetch restaurants using Overpass API
-            restaurants = get_restaurants(mid_lat, mid_lng, price, cuisine)
+            restaurants = get_restaurants(mid_lat, mid_lng, price, cuisine, radius)
+            print("Yelp API response data:", json.dumps(data, indent=2))
+
 
             return render_template("results.html", restaurants=restaurants, mid_lat=mid_lat, mid_lng=mid_lng)
         
@@ -164,49 +170,48 @@ def logout():
     return redirect(url_for('login'))
 
 
-def get_restaurants(mid_lat, mid_lng, price, cuisine):
-    """Fetch restaurant recommendations using Overpass API (OpenStreetMap)."""
-    overpass_url = "https://overpass-api.de/api/interpreter"
-    
-    query = f"""
-    [out:json];
-    node
-      ["amenity"="restaurant"]
-      (around:2000,{mid_lat},{mid_lng});
-    out;
-    """
+def get_restaurants(mid_lat, mid_lng, price=None, cuisine=None, radius=2000):
+    url = "https://api.yelp.com/v3/businesses/search"
+    headers = { "Authorization": f"Bearer {YELP_API_Key}"}
 
+    params = {
+        "latitude": mid_lat,
+        "longitude": mid_lng,
+        "categories": "restaurants",
+        "radius": radius,
+        "limit": 20,
+        "sort_by": "best_match"
+    }
+
+    if price:
+        params["price"] = price
+
+    if cuisine and cuisine.strip():
+        params["categories"] = cuisine.strip().lower() 
+    else:
+        params["categories"] = "restaurants"
+    
     try:
-        response = requests.get(overpass_url, params={"data": query}, timeout=10)
+        response = requests.get(url, headers=headers, params=params, timeout = 10)
         response.raise_for_status()
         data = response.json()
     except requests.exceptions.RequestException as e:
-        print("Error fetching data from Overpass API:", e)
+        print("Error fetching data from API:", e)
         return []
-
+    
     restaurants = []
-    for element in data.get("elements", []):
-        name = element.get("tags", {}).get("name", "Unknown")
-        address = element.get("tags", {}).get("addr:street", "No address provided")
-        cuisine_type = element.get("tags", {}).get("cuisine", "Unknown").lower()
-        lat, lon = element.get("lat"), element.get("lon")
-
-        if cuisine and cuisine.lower() not in cuisine_type:
-            continue
-
-        if price and price not in ["$", "$$", "$$$"]:
-            continue  
-
+    for biz in data.get("businesses", []):
         restaurants.append({
-            "name": name,
-            "address": address,
-            "cuisine": cuisine_type.capitalize(),
-            "lat": lat,
-            "lon": lon
+            "name": biz.get("name", "Unknown"),
+            "address": ", ".join(biz.get("location", {}).get("display_address", [])),
+            "categories": ", ".join([c["title"] for c in biz.get("categories", [])]),
+            "lat": biz.get("coordinates", {}).get("latitude"),
+            "lon": biz.get("coordinates", {}).get("longitude"),
+            "price": biz.get("price", "N/A"),
+            "rating": biz.get("rating", "N/A"),
+            "url": biz.get("url", "")
         })
-
     return restaurants
-
 
 
 @app.route("/myrestaurants")
@@ -224,32 +229,100 @@ def results():
             lat2, lng2 = data.get("lat2"), data.get("lng2")
             price = data.get("price")
             cuisine = data.get("cuisine")
+            radius = int(data.get("radius", 2000))
+        
+            # Validate and convert coordinates
+            try:
+                lat1, lng1 = float(lat1), float(lng1)
+                lat2, lng2 = float(lat2), float(lng2)
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid coordinate values"}), 400
 
             if not all([lat1, lng1, lat2, lng2]):
                 return jsonify({"error": "Invalid locations"}), 400
 
-            # Find midpoint
-            mid_lat, mid_lng = (float(lat1) + float(lat2)) / 2, (float(lng1) + float(lng2)) / 2
+            mid_lat, mid_lng = (lat1 + lat2) / 2, (lng1 + lng2) / 2
 
-            # Fetch restaurants using Overpass API
-            restaurants = get_restaurants(mid_lat, mid_lng, price, cuisine)
+            restaurants = get_restaurants(mid_lat, mid_lng, price, cuisine, radius)
 
-            return jsonify({"mid_lat": mid_lat, "mid_lng": mid_lng, "restaurants": restaurants})
+            # Store data in session for GET request - ensure all values are JSON serializable
+            session['restaurants'] = restaurants
+            session['mid_lat'] = float(mid_lat)
+            session['mid_lng'] = float(mid_lng)
+            session['location_a'] = {"lat": float(lat1), "lng": float(lng1)}
+            session['location_b'] = {"lat": float(lat2), "lng": float(lng2)}
+
+            return jsonify({
+                "success": True,
+                "redirect_url": f"/results?mid_lat={mid_lat}&mid_lng={mid_lng}"
+            })
 
         except Exception as e:
             print("Error processing request:", e)
             return jsonify({"error": "An error occurred while processing your request. Please try again."}), 500
 
     elif request.method == "GET":
-        # Get midpoint values from query parameters
-        mid_lat = request.args.get("mid_lat")
-        mid_lng = request.args.get("mid_lng")
+        # Try to get mid_lat/mid_lng from query params first
+        mid_lat_param = request.args.get("mid_lat")
+        mid_lng_param = request.args.get("mid_lng")
+        
+        mid_lat = None
+        mid_lng = None
+        
+        # If query params are valid, use them; otherwise fall back to session
+        if mid_lat_param and mid_lng_param and mid_lat_param != 'undefined' and mid_lng_param != 'undefined':
+            try:
+                mid_lat = float(mid_lat_param)
+                mid_lng = float(mid_lng_param)
+            except (ValueError, TypeError):
+                print(f"Error converting query params to float: {mid_lat_param}, {mid_lng_param}")
+                mid_lat = None
+                mid_lng = None
+        
+        # Fall back to session values if query params failed
+        if mid_lat is None or mid_lng is None:
+            mid_lat = session.get('mid_lat')
+            mid_lng = session.get('mid_lng')
+            
+            # Convert to float if they're strings
+            if isinstance(mid_lat, str):
+                try:
+                    mid_lat = float(mid_lat)
+                except (ValueError, TypeError):
+                    mid_lat = None
+                    
+            if isinstance(mid_lng, str):
+                try:
+                    mid_lng = float(mid_lng)
+                except (ValueError, TypeError):
+                    mid_lng = None
 
-        # Ensure values are valid
-        if not mid_lat or not mid_lng:
-            return "Invalid request", 400
+        # Get other data from session with proper defaults
+        restaurants = session.get('restaurants', [])
+        location_a = session.get('location_a')
+        location_b = session.get('location_b')
 
-        return render_template("results.html", mid_lat=mid_lat, mid_lng=mid_lng)
+        # Ensure location_a and location_b are valid dictionaries
+        if not isinstance(location_a, dict) or 'lat' not in location_a or 'lng' not in location_a:
+            location_a = {"lat": mid_lat or 0.0, "lng": mid_lng or 0.0}
+        
+        if not isinstance(location_b, dict) or 'lat' not in location_b or 'lng' not in location_b:
+            location_b = {"lat": mid_lat or 0.0, "lng": mid_lng or 0.0}
+
+        # If we still don't have valid coordinates, redirect to home
+        if not mid_lat or not mid_lng or mid_lat == 0.0 and mid_lng == 0.0:
+            flash("Please enter two locations first", "error")
+            return redirect(url_for('index'))
+
+        # Ensure all values are JSON serializable
+        return render_template(
+            "results.html",
+            restaurants=restaurants if isinstance(restaurants, list) else [],
+            mid_lat=float(mid_lat),
+            mid_lng=float(mid_lng),
+            location1=location_a,
+            location2=location_b
+        )
 
 @app.route('/restaurant_results')
 def restaurant_results():
@@ -409,6 +482,43 @@ def find_restaurants_between_locations(location1, location2, radius=1000):
         },
         'search_radius': search_radius
     }
+
+@app.route('/save-restaurant', methods=['POST'])
+def save_restaurant():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'User not logged in'}), 401
+    
+    try:
+        data = request.get_json()
+        restaurant_data = {
+            'user_id': session['user_id'],
+            'name': data.get('name'),
+            'address': data.get('address'),
+            'cuisine': data.get('cuisine'),
+            'price': data.get('price'),
+            'rating': data.get('rating'),
+            'url': data.get('url'),
+            'saved_at': datetime.now()
+        }
+        
+        # Check if restaurant is already saved by this user
+        existing = db.saved_restaurants.find_one({
+            'user_id': session['user_id'],
+            'name': restaurant_data['name'],
+            'address': restaurant_data['address']
+        })
+        
+        if existing:
+            return jsonify({'success': False, 'error': 'Restaurant already saved'}), 400
+        
+        # Save to database
+        db.saved_restaurants.insert_one(restaurant_data)
+        
+        return jsonify({'success': True, 'message': 'Restaurant saved successfully'})
+        
+    except Exception as e:
+        print(f"Error saving restaurant: {e}")
+        return jsonify({'success': False, 'error': 'Failed to save restaurant'}), 500
 
 
 if __name__ == "__main__":

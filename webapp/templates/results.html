@@ -9,6 +9,7 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -27,108 +28,237 @@
         </div>
     </nav>
 
-    <h2>Restaurant Locations</h2>
-    <div id="map" style="height: 500px;"></div>
+    <div class="container">
+        <h2>Restaurant Recommendations</h2>
+        
+        <!-- Map Container -->
+        <div id="map" style="height: 500px; margin-bottom: 20px;"></div>
 
-    <!-- Add these meta tags to store the coordinates -->
-    <meta name="restaurant-data" content="{{ restaurants|tojson|safe }}">
-    <meta name="location1" content="{{ location1|tojson|safe }}">
-    <meta name="location2" content="{{ location2|tojson|safe }}">
+        <!-- Restaurant List -->
+        <div class="restaurant-list">
+            <h3>Found {{ restaurants|length }} restaurants</h3>
+            {% for restaurant in restaurants %}
+            <div class="restaurant-card" data-lat="{{ restaurant.lat }}" data-lng="{{ restaurant.lon }}">
+                <h4>{{ restaurant.name }}</h4>
+                <p><strong>Address:</strong> {{ restaurant.address }}</p>
+                <p><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
+                <p><strong>Price:</strong> {{ restaurant.price }}</p>
+                <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
+                <div class="restaurant-actions">
+                    {% if restaurant.url %}
+                    <a href="{{ restaurant.url }}" target="_blank" class="btn btn-primary">View on Yelp</a>
+                    {% endif %}
+                    <button class="btn btn-secondary save-restaurant" 
+                            data-name="{{ restaurant.name }}" 
+                            data-address="{{ restaurant.address }}"
+                            data-cuisine="{{ restaurant.cuisine }}"
+                            data-price="{{ restaurant.price }}"
+                            data-rating="{{ restaurant.rating }}"
+                            data-url="{{ restaurant.url }}">
+                        Save Restaurant
+                    </button>
+                    <button class="btn btn-info show-on-map" 
+                            data-lat="{{ restaurant.lat }}" 
+                            data-lng="{{ restaurant.lon }}"
+                            data-name="{{ restaurant.name }}">
+                        Show on Map
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 
     <script>
+        let map;
+        let restaurantMarkers = [];
+        
         document.addEventListener("DOMContentLoaded", function () {
-    try {
-        // Get the map container
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer) {
-            console.error('Map container not found');
-            return;
-        }
-
-        // Get restaurant data from meta tag with error handling
-        let restaurantData, location1, location2;
-        try {
-            const restaurantMeta = document.querySelector('meta[name="restaurant-data"]');
-            const location1Meta = document.querySelector('meta[name="location1"]');
-            const location2Meta = document.querySelector('meta[name="location2"]');
+            // Initialize map
+            const midLat = {{ mid_lat }};
+            const midLng = {{ mid_lng }};
             
-            if (!restaurantMeta || !location1Meta || !location2Meta) {
-                throw new Error("Required meta tags not found");
-            }
+            map = L.map('map').setView([midLat, midLng], 14);
             
-            restaurantData = JSON.parse(restaurantMeta.content);
-            location1 = JSON.parse(location1Meta.content);
-            location2 = JSON.parse(location2Meta.content);
-        } catch (e) {
-            console.error("Error parsing location data:", e);
-            mapContainer.innerHTML = "Error loading map data. Please try again.";
-            return;
-        }
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-        // Calculate the midpoint
-        const midLat = (location1.lat + location2.lat) / 2;
-        const midLng = (location2.lng + location2.lng) / 2;
+            // Add location markers
+            const locationA = {{ location1|tojson }};
+            const locationB = {{ location2|tojson }};
 
-        // Initialize the map
-        const map = L.map('map').setView([midLat, midLng], 14);
-
-        // Add the tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Add location markers
-        const location1Marker = L.marker([location1.lat, location1.lng])
-            .bindPopup(`Starting Point: ${location1.name}`)
-            .addTo(map);
             
-        const location2Marker = L.marker([location2.lat, location2.lng])
-            .bindPopup(`Destination: ${location2.name}`)
-            .addTo(map);
+            L.marker([locationA.lat, locationA.lng])
+                .bindPopup("Starting Location")
+                .addTo(map);
+                
+            L.marker([locationB.lat, locationB.lng])
+                .bindPopup("Destination Location")
+                .addTo(map);
 
-        // Add restaurant markers
-        if (Array.isArray(restaurantData)) {
-            restaurantData.forEach(restaurant => {
+            // Add restaurant markers
+            const restaurants = {{ restaurants|tojson }};
+            restaurants.forEach(function(restaurant) {
                 if (restaurant.lat && restaurant.lon) {
                     const marker = L.marker([restaurant.lat, restaurant.lon])
                         .bindPopup(`
                             <div class="restaurant-popup">
-                                <strong>${restaurant.name || 'Unnamed Restaurant'}</strong>
-                                <br>${restaurant.address || 'No address provided'}
-                                <br>Cuisine: ${restaurant.cuisine || 'Not specified'}
-                                <br>Distance: ${Math.round(restaurant.distance)}m
+                                <h4>${restaurant.name}</h4>
+                                <p><strong>Address:</strong> ${restaurant.address}</p>
+                                <p><strong>Cuisine:</strong> ${restaurant.cuisine}</p>
+                                <p><strong>Price:</strong> ${restaurant.price}</p>
+                                <p><strong>Rating:</strong> ${restaurant.rating}</p>
+                                ${restaurant.url ? `<a href="${restaurant.url}" target="_blank">View on Yelp</a>` : ''}
                             </div>
                         `)
                         .addTo(map);
-
-                    marker.on('mouseover', function (e) {
-                        this.openPopup();
+                    
+                    restaurantMarkers.push({
+                        marker: marker,
+                        name: restaurant.name,
+                        lat: restaurant.lat,
+                        lon: restaurant.lon
                     });
                 }
             });
-        }
 
-        // Fit bounds to show all markers
-        const bounds = L.latLngBounds([
-            [location1.lat, location1.lng],
-            [location2.lat, location2.lng]
-        ]);
-        
-        if (Array.isArray(restaurantData)) {
-            restaurantData.forEach(restaurant => {
+            // Fit bounds to show all markers
+            const bounds = L.latLngBounds([
+                [locationA.lat, locationA.lng],
+                [locationB.lat, locationB.lng]
+            ]);
+            
+            restaurants.forEach(function(restaurant) {
                 if (restaurant.lat && restaurant.lon) {
                     bounds.extend([restaurant.lat, restaurant.lon]);
                 }
             });
+            
+            map.fitBounds(bounds, { padding: [50, 50] });
+
+            // Show on map functionality
+            $('.show-on-map').click(function() {
+                const lat = parseFloat($(this).data('lat'));
+                const lng = parseFloat($(this).data('lng'));
+                const name = $(this).data('name');
+                
+                map.setView([lat, lng], 16);
+                
+                // Find and open the corresponding marker popup
+                restaurantMarkers.forEach(function(item) {
+                    if (item.name === name) {
+                        item.marker.openPopup();
+                    }
+                });
+            });
+
+            // Save restaurant functionality
+            $('.save-restaurant').click(function() {
+                const restaurantData = {
+                    name: $(this).data('name'),
+                    address: $(this).data('address'),
+                    cuisine: $(this).data('cuisine'),
+                    price: $(this).data('price'),
+                    rating: $(this).data('rating'),
+                    url: $(this).data('url')
+                };
+                
+                // You'll need to implement this route in your Flask app
+                $.ajax({
+                    type: 'POST',
+                    url: '/save-restaurant',
+                    contentType: 'application/json',
+                    data: JSON.stringify(restaurantData),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Restaurant saved successfully!');
+                        } else {
+                            alert('Error saving restaurant: ' + response.error);
+                        }
+                    },
+                    error: function() {
+                        alert('Error saving restaurant. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
         
-        map.fitBounds(bounds, { padding: [50, 50] });
-    } catch (e) {
-        console.error("Error initializing map:", e);
-        mapContainer.innerHTML = "Error loading map. Please try again.";
-    }
-});
-    </script>
+        .restaurant-list {
+            margin-top: 20px;
+        }
+        
+        .restaurant-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .restaurant-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .restaurant-card p {
+            margin: 5px 0;
+        }
+        
+        .restaurant-actions {
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .restaurant-popup {
+            max-width: 250px;
+        }
+        
+        .restaurant-popup h4 {
+            margin: 0 0 10px 0;
+        }
+        
+        .restaurant-popup p {
+            margin: 5px 0;
+        }
+    </style>
 </body>
 </html>
