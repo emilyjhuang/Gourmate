@@ -38,34 +38,36 @@
         <div class="restaurant-list">
             <h3>Found {{ restaurants|length }} restaurants</h3>
             {% for restaurant in restaurants %}
-            <div class="restaurant-card" data-lat="{{ restaurant.lat }}" data-lng="{{ restaurant.lon }}">
+            <div class="restaurant-card">
                 <h4>{{ restaurant.name }}</h4>
                 <p><strong>Address:</strong> {{ restaurant.address }}</p>
-                <p><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
+                <p><strong>Cuisine:</strong> {{ restaurant.categories }}</p>
                 <p><strong>Price:</strong> {{ restaurant.price }}</p>
                 <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
-                <div class="restaurant-actions">
-                    {% if restaurant.url %}
-                    <a href="{{ restaurant.url }}" target="_blank" class="btn btn-primary">View on Yelp</a>
-                    {% endif %}
-                    <button class="btn btn-secondary save-restaurant" 
-                            data-name="{{ restaurant.name }}" 
-                            data-address="{{ restaurant.address }}"
-                            data-cuisine="{{ restaurant.cuisine }}"
-                            data-price="{{ restaurant.price }}"
-                            data-rating="{{ restaurant.rating }}"
-                            data-url="{{ restaurant.url }}">
-                        Save Restaurant
-                    </button>
-                    <button class="btn btn-info show-on-map" 
-                            data-lat="{{ restaurant.lat }}" 
-                            data-lng="{{ restaurant.lon }}"
-                            data-name="{{ restaurant.name }}">
-                        Show on Map
-                    </button>
-                </div>
+
+                <a href="{{ restaurant.url }}" class="btn btn-primary" target="_blank">
+                    View on Yelp
+                </a>
+
+                <button 
+                    class="btn btn-secondary save-btn"
+                    data-name="{{ restaurant.name }}"
+                    data-address="{{ restaurant.address }}"
+                    data-cuisine="{{ restaurant.categories }}"
+                    data-price="{{ restaurant.price }}"
+                    data-rating="{{ restaurant.rating }}"
+                    data-url="{{ restaurant.url }}">
+                    Save Restaurant
+                </button>
+
+
+                <a href="https://www.google.com/maps/search/?api=1&query={{ restaurant.lat }},{{ restaurant.lon }}" 
+                class="btn btn-info" target="_blank">
+                    Show on Map
+                </a>
             </div>
             {% endfor %}
+
         </div>
     </div>
 
@@ -85,12 +87,11 @@
                 maxZoom: 18,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
-
+        
             // Add location markers
             const locationA = {{ location1|tojson }};
             const locationB = {{ location2|tojson }};
-
-            
+        
             L.marker([locationA.lat, locationA.lng])
                 .bindPopup("Starting Location")
                 .addTo(map);
@@ -98,7 +99,7 @@
             L.marker([locationB.lat, locationB.lng])
                 .bindPopup("Destination Location")
                 .addTo(map);
-
+        
             // Add restaurant markers
             const restaurants = {{ restaurants|tojson }};
             restaurants.forEach(function(restaurant) {
@@ -111,7 +112,16 @@
                                 <p><strong>Cuisine:</strong> ${restaurant.cuisine}</p>
                                 <p><strong>Price:</strong> ${restaurant.price}</p>
                                 <p><strong>Rating:</strong> ${restaurant.rating}</p>
-                                ${restaurant.url ? `<a href="${restaurant.url}" target="_blank">View on Yelp</a>` : ''}
+                                ${restaurant.url ? `<a href="${restaurant.url}" target="_blank" class="btn btn-primary btn-sm">View on Yelp</a>` : ''}
+                                <button class="btn btn-secondary btn-sm mt-2 save-restaurant"
+                                    data-name="${restaurant.name}"
+                                    data-address="${restaurant.address}"
+                                    data-cuisine="${restaurant.cuisine}"
+                                    data-price="${restaurant.price}"
+                                    data-rating="${restaurant.rating}"
+                                    data-url="${restaurant.url}">
+                                    Save Restaurant
+                                </button>
                             </div>
                         `)
                         .addTo(map);
@@ -124,7 +134,7 @@
                     });
                 }
             });
-
+        
             // Fit bounds to show all markers
             const bounds = L.latLngBounds([
                 [locationA.lat, locationA.lng],
@@ -138,9 +148,9 @@
             });
             
             map.fitBounds(bounds, { padding: [50, 50] });
-
+        
             // Show on map functionality
-            $('.show-on-map').click(function() {
+            $(document).on('click', '.show-on-map', function () {
                 const lat = parseFloat($(this).data('lat'));
                 const lng = parseFloat($(this).data('lng'));
                 const name = $(this).data('name');
@@ -154,38 +164,39 @@
                     }
                 });
             });
-
+        
             // Save restaurant functionality
-            $('.save-restaurant').click(function() {
+            $(document).on('click', '.save-restaurant', function () {
+                const button = $(this);
                 const restaurantData = {
-                    name: $(this).data('name'),
-                    address: $(this).data('address'),
-                    cuisine: $(this).data('cuisine'),
-                    price: $(this).data('price'),
-                    rating: $(this).data('rating'),
-                    url: $(this).data('url')
+                    name: button.data('name'),
+                    address: button.data('address'),
+                    cuisine: button.data('cuisine'),
+                    price: button.data('price'),
+                    rating: button.data('rating'),
+                    url: button.data('url')
                 };
-                
-                // You'll need to implement this route in your Flask app
+        
                 $.ajax({
-                    type: 'POST',
                     url: '/save-restaurant',
+                    type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(restaurantData),
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             alert('Restaurant saved successfully!');
                         } else {
-                            alert('Error saving restaurant: ' + response.error);
+                            alert('⚠️ Already saved or error: ' + response.error);
                         }
                     },
-                    error: function() {
-                        alert('Error saving restaurant. Please try again.');
+                    error: function () {
+                        alert('Failed to save restaurant. Please try again.');
                     }
                 });
             });
         });
-    </script>
+        </script>
+        
 
     <style>
         .container {

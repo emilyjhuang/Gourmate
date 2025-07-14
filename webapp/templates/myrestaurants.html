@@ -34,10 +34,24 @@
         </div>
     </nav>
 
-    <div class="myrestaurant-container">
-        <h2> My Saved Restaurants</h2>
+    <h2>My Saved Restaurants</h2>
 
+        {% if restaurants %}
+            {% for r in restaurants %}
+            <div class="restaurant-card">
+                <h4>{{ r.name }}</h4>
+                <p><strong>Address:</strong> {{ r.address }}</p>
+                <p><strong>Cuisine:</strong> {{ r.cuisine }}</p>
+                <p><strong>Price:</strong> {{ r.price }}</p>
+                <p><strong>Rating:</strong> {{ r.rating }}</p>
 
+                <a href="{{ r.url }}" class="btn btn-primary" target="_blank">View on Yelp</a>
+                <a href="https://www.google.com/maps/search/?api=1&query={{ r.address | urlencode }}" class="btn btn-info" target="_blank">
+                    Show on Map
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>You haven’t saved any restaurants yet.</p>
+        {% endif %}
 
-
-    </div>

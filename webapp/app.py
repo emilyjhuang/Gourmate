@@ -23,23 +23,18 @@ import time
 
 # --------SETUP FLASK & MONGODB--------
 from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
-load_dotenv()  # load .env file
-app = Flask(__name__)
-app.secret_key = "this_is_my_random_secret_key_987654321"
-MONGO_URI = os.getenv(
-    "MONGO_URI",
-    "mongodb+srv://huangemily449:huangemily449@cluster0.yja9n.mongodb.net/cluster0?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true"
-)
+MONGO_URI = os.getenv("MONGO_URI")
 
 MONGO_DBNAME = os.getenv("MONGO_DBNAME", "Gourmate")
 
 #yelp
-
 YELP_API_Key = os.getenv('YELP_API_Key')
+
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)  # create MongoDB client
 db = client[MONGO_DBNAME]  # access database
@@ -216,7 +211,13 @@ def get_restaurants(mid_lat, mid_lng, price=None, cuisine=None, radius=2000):
 
 @app.route("/myrestaurants")
 def my_restaurants():
-    return render_template("myrestaurants.html")
+    if "user_id" not in session:
+        flash("Please log in to view saved restaurants", "error")
+        return redirect(url_for("login"))
+
+    saved = list(db.saved_restaurants.find({"user_id": session["user_id"]}))
+
+    return render_template("myrestaurants.html", restaurants=saved)
 
 @app.route("/results", methods=["POST", "GET"])
 def results():
