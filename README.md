@@ -1,4 +1,17 @@
-**4. Create a Virtual Environment:**
+
+## TABLE OF CONTENTS
+
+1. [Description](#description)
+3. [Setup Steps](#setup-steps)
+4. [Team Members](#team-members)
+
+
+## Description
+
+A web app where you can put you and your friend's location and get instant restaurant recommendations in between the two of you. Be able to update and save recommended restaurants and keep building your foodie profile!
+## Setup Steps
+
+**Create a Virtual Environment:**
 
 - _Mac:_
 
@@ -13,7 +26,7 @@
   .venv\Scripts\activate
   ```
 
-**5. Install Dependencies:**
+**Install Dependencies:**
 
 ```
 pip install opencv-python-headless
@@ -39,3 +52,6 @@ source .venv/bin/activate  # On Mac/Linux
 pip install -r requirements.txt
 
 ```
+
+
+Get Eating!:** Access Gourmate [here](https://gourmate.onrender.com/)!
