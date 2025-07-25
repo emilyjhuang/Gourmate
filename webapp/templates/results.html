@@ -19,9 +19,9 @@
                 <a href="{{ url_for('index') }}">NYC Restaurant Finder</a>
             </div>
             <div class="nav-links">
-                <a href="{{ url_for('index') }}">Home</a>
-                <a href="find_rests_page.html">Find Restaurants</a>
-                <a href="myrestaurants.html">My Restaurants</a>
+                <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+                <a href="{{ url_for('my_restaurants') }}">My Saves</a>
+                <a href="{{ url_for('been_to') }}">Been To</a>
                 <a href="{{ url_for('profile') }}">My Profile</a>
                 <a href="{{ url_for('account') }}">Logout</a>
             </div>
@@ -36,7 +36,6 @@
 
         <!-- Restaurant List -->
         <div class="restaurant-list">
-            <h3>Found {{ restaurants|length }} restaurants</h3>
             {% for restaurant in restaurants %}
             <div class="restaurant-card">
                 <h4>{{ restaurant.name }}</h4>
@@ -49,16 +48,12 @@
                     View on Yelp
                 </a>
 
-                <button 
-                    class="btn btn-secondary save-btn"
-                    data-name="{{ restaurant.name }}"
-                    data-address="{{ restaurant.address }}"
-                    data-cuisine="{{ restaurant.categories }}"
-                    data-price="{{ restaurant.price }}"
-                    data-rating="{{ restaurant.rating }}"
-                    data-url="{{ restaurant.url }}">
+                <button onclick="saveRestaurant(this)" data-name="{{ restaurant.name }}" data-address="{{ restaurant.address }}"
+                        data-cuisine="{{ restaurant.categories }}" data-price="{{ restaurant.price }}"
+                        data-rating="{{ restaurant.rating }}" data-url="{{ restaurant.url }}">
                     Save Restaurant
                 </button>
+
 
 
                 <a href="https://www.google.com/maps/search/?api=1&query={{ restaurant.lat }},{{ restaurant.lon }}" 
@@ -101,7 +96,7 @@
                 .addTo(map);
         
             // Add restaurant markers
-            const restaurants = {{ restaurants|tojson }};
+            const restaurants = {{ restaurants|tojson|safe }};
             restaurants.forEach(function(restaurant) {
                 if (restaurant.lat && restaurant.lon) {
                     const marker = L.marker([restaurant.lat, restaurant.lon])
@@ -148,6 +143,8 @@
             });
             
             map.fitBounds(bounds, { padding: [50, 50] });
+            window.scrollTo(0, 0);
+
         
             // Show on map functionality
             $(document).on('click', '.show-on-map', function () {
@@ -164,48 +161,53 @@
                     }
                 });
             });
-        
-            // Save restaurant functionality
-            map.on('popupopen', function(e) {
-                const popupContent = e.popup.getElement();
-
-                $(popupContent).find('.save-restaurant').off('click').on('click', function () {
-                    const button = $(this);
-                    const restaurantData = {
-                        name: button.data('name'),
-                        address: button.data('address'),
-                        cuisine: button.data('cuisine'),
-                        price: button.data('price'),
-                        rating: button.data('rating'),
-                        url: button.data('url')
-                    };
-        
-                $.ajax({
-                    url: '/save-restaurant',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(restaurantData),
-                    success: function (response) {
-                        if (response.success) {
-                            alert('Restaurant saved successfully!');
-                        } else {
-                            alert('⚠️ Already saved or error: ' + response.error);
-                        }
-                    },
-                    error: function () {
-                        alert('Failed to save restaurant. Please try again.');
-                    }
-                });
-            });
+    
         });
+        function saveRestaurant(button) {
+                const data = {
+                    name: button.dataset.name,
+                    address: button.dataset.address,
+                    cuisine: button.dataset.cuisine,
+                    price: button.dataset.price,
+                    rating: button.dataset.rating,
+                    url: button.dataset.url
+                };
+
+                fetch('/save-restaurant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('Restaurant saved!');
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('Something went wrong.');
+                });
+            }
+            
         </script>
         
 
     <style>
+        html, body {
+            height: auto;
+            overflow: hidden;
+            overflow-y: scroll;
+            margin: 0;
+            padding: 0;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 80px 20px 20px;
         }
         
         .restaurant-list {

@@ -1,0 +1,9 @@
+from pymongo import MongoClient
+
+uri = "mongodb+srv://huangemily449:emilyjamie@cluster0.yja9n.mongodb.net/Gourmate?retryWrites=true&w=majority"
+client = MongoClient(uri)
+
+try:
+    print(client.list_database_names())
+except Exception as e:
+    print("❌ Connection failed:", e)

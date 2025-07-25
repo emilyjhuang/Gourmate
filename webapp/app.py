@@ -39,7 +39,7 @@ YELP_API_Key = os.getenv('YELP_API_Key')
 client = MongoClient(MONGO_URI)  # create MongoDB client
 db = client[MONGO_DBNAME]  # access database
 users_collection = db["users"]  # collection of users
-rests_collection = db["events"]  # collection of bars
+rests_collection = db["restaurants"]
 
 # --------ACCOUNT PAGE--------
 @app.route("/account")
@@ -48,7 +48,7 @@ def account():
 
 # # --------LOGIN PAGE--------
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"].strip()
@@ -70,7 +70,7 @@ def login():
                 session["user_id"] = str(user["_id"])
                 session["username"] = username
                 session.permanent = False
-                return redirect(url_for("index"))
+                return redirect(url_for("login"))
             else:
                 # Incorrect password
                 flash("Invalid username or password.", "error")
@@ -89,6 +89,8 @@ def signup():
     if request.method == "POST":
         username = request.form["username"].strip()
         raw_password = request.form["password"].strip()
+        name = request.form["name"].strip()
+
 
         # Encode the password to bytes
         password_bytes = raw_password.encode("utf-8")
@@ -99,7 +101,7 @@ def signup():
 
         # Hash the password (bcrypt.hashpw returns bytes)
         hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
-        users_collection.insert_one({"username": username, "password": hashed_password})
+        users_collection.insert_one({"name": name, "username": username, "password": hashed_password})
 
         flash("Account created successfully. Please log in.", "success")
 
@@ -110,8 +112,8 @@ def signup():
 
 
 # --------HOME PAGE--------
-@app.route("/", methods=["GET", "POST"])
-def index():
+@app.route("/findrests", methods=["GET", "POST"])
+def findrests():
     if request.method == "POST":
         try:
             data = request.get_json()
@@ -140,7 +142,7 @@ def index():
             print("Error processing request:", e)
             return jsonify({"error": "An error occurred while processing your request. Please try again."}), 500
 
-    return render_template("index.html")
+    return render_template("findrests.html")
 
 
 # Load data from a file (optional persistent storage)
@@ -174,7 +176,7 @@ def get_restaurants(mid_lat, mid_lng, price=None, cuisine=None, radius=2000):
         "longitude": mid_lng,
         "categories": "restaurants",
         "radius": radius,
-        "limit": 20,
+        "limit": 5,
         "sort_by": "best_match"
     }
 
@@ -214,6 +216,17 @@ def my_restaurants():
     if 'user_id' not in session:
         flash("Please log in to view your saved restaurants.", "error")
         return redirect(url_for('login'))
+    
+    raw_data = list(db.saved_restaurants.find({"user_id": session['user_id']}))
+
+    # Deduplicate by name + address
+    seen = set()
+    unique_restaurants = []
+    for r in raw_data:
+        key = (r['name'], r['address'])
+        if key not in seen:
+            seen.add(key)
+            unique_restaurants.append(r)
 
     saved_restaurants = list(db.saved_restaurants.find({"user_id": session['user_id']}))
     return render_template("myrestaurants.html", saved_restaurants=saved_restaurants)
@@ -313,7 +326,7 @@ def results():
         # If we still don't have valid coordinates, redirect to home
         if not mid_lat or not mid_lng or mid_lat == 0.0 and mid_lng == 0.0:
             flash("Please enter two locations first", "error")
-            return redirect(url_for('index'))
+            return redirect(url_for('findrests'))
 
         # Ensure all values are JSON serializable
         return render_template(
@@ -333,14 +346,14 @@ def restaurant_results():
     
     if not location1_name or not location2_name:
         flash("Please enter two locations first", "error")
-        return redirect(url_for('index'))
+        return redirect(url_for('findrests'))
     
     # Get restaurant data
     result = find_restaurants_between_locations(location1_name, location2_name)
     
     if not result['success']:
         flash(result['error'], "error")
-        return redirect(url_for('index'))
+        return redirect(url_for('findrests'))
     
     # Prepare the data for JSON serialization
     restaurant_data = result['restaurants']  # This is already a list of dictionaries
@@ -520,6 +533,29 @@ def save_restaurant():
     except Exception as e:
         print(f"Error saving restaurant: {e}")
         return jsonify({'success': False, 'error': 'Failed to save restaurant'}), 500
+
+
+@app.route('/mark-visited', methods=['POST'])
+def mark_visited():
+    data = request.get_json()
+    rest_id = data['rest_id']
+    user_rating = data['user_rating']
+    user_id = session['user_id']
+
+    restaurant = db.saved_restaurants.find_one({"_id": ObjectId(rest_id), "user_id": user_id})
+    if restaurant:
+        restaurant['user_rating'] = user_rating
+        db.been_to.insert_one(restaurant)
+        db.saved_restaurants.delete_one({"_id": ObjectId(rest_id)})
+        return jsonify(success=True)
+    return jsonify(success=False, error="Not found")
+
+@app.route("/been-to")
+def been_to():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    been_to = list(db.been_to.find({"user_id": session['user_id']}))
+    return render_template("been_to.html", been_to=been_to)
 
 
 if __name__ == "__main__":

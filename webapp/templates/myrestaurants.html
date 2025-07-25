@@ -1,31 +1,78 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Saved Restaurants</title>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-links">
+            <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+            <a href="{{ url_for('my_restaurants') }}">My Restaurants</a>
+            <a href="{{ url_for('been_to') }}">Been To</a>
+            <a href="{{ url_for('profile') }}">My Profile</a>
+            <a href="{{ url_for('account') }}">Logout</a>              
+          </div>
+    </nav>
 
-{% block content %}
-<div class="container mt-4">
-    <h2>My Saved Restaurants</h2>
-
+    <h2>Saved Restaurants</h2>
     {% if saved_restaurants %}
-        <div class="row">
+        <div class="restaurant-list">
             {% for rest in saved_restaurants %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ rest.name }}</h5>
-                            <p class="card-text"><strong>Address:</strong> {{ rest.address }}</p>
-                            <p class="card-text"><strong>Cuisine:</strong> {{ rest.cuisine }}</p>
-                            <p class="card-text"><strong>Price:</strong> {{ rest.price }}</p>
-                            <p class="card-text"><strong>Rating:</strong> {{ rest.rating }}</p>
-                            {% if rest.url %}
-                                <a href="{{ rest.url }}" target="_blank" class="btn btn-primary btn-sm">View on Yelp</a>
-                            {% endif %}
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ rest.address | urlencode }}" target="_blank" class="btn btn-secondary btn-sm">Show on Maps</a>
-                        </div>
-                    </div>
-                </div>
+            <div class="restaurant-card">
+                <h3>{{ rest.name }}</h3>
+                <p><strong>Address:</strong> {{ rest.address }}</p>
+                <p><strong>Cuisine:</strong> {{ rest.cuisine }}</p>
+                <p><strong>Price:</strong> {{ rest.price }}</p>
+                <p><strong>Rating:</strong> {{ rest.rating }}</p>
+                <button onclick="markAsVisited('{{ rest._id }}')">I Went</button>
+            </div>
             {% endfor %}
         </div>
+    
     {% else %}
-        <p>You have no saved restaurants yet. Start exploring and save some!</p>
+        <p>No saved restaurants yet.</p>
     {% endif %}
-</div>
-{% endblock %}
+
+    <div id="ratingPopup" style="display:none;">
+        <label>Rate this restaurant (1-5):</label>
+        <input type="number" id="ratingInput" min="1" max="5">
+        <button onclick="submitRating()">Submit</button>
+      </div>
+      
+      <script>
+      let currentRestId = null;
+      
+      function markAsVisited(restId) {
+          currentRestId = restId;
+          document.getElementById("ratingPopup").style.display = "block";
+      }
+      
+      function submitRating() {
+          const rating = document.getElementById("ratingInput").value;
+          if (rating < 1 || rating > 5) {
+              alert("Please enter a rating between 1 and 5.");
+              return;
+          }
+      
+          fetch('/mark-visited', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ rest_id: currentRestId, user_rating: rating })
+          }).then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                  alert("Saved to 'Been To'");
+                  location.reload();
+              } else {
+                  alert("Error saving.");
+              }
+          });
+      
+          document.getElementById("ratingPopup").style.display = "none";
+      }
+      </script>
+      
+</body>
+</html>

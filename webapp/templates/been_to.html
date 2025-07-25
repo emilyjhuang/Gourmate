@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Saved Restaurants</title>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-links">
+            <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+            <a href="{{ url_for('my_restaurants') }}">My Saves</a>
+            <a href="{{ url_for('been_to') }}">Been To</a>
+            <a href="{{ url_for('profile') }}">My Profile</a>
+            <a href="{{ url_for('account') }}">Logout</a>              
+          </div>
+    </nav>
+
+    <h2>Restaurants You've Been To</h2>
+        {% for rest in been_to %}
+        <div class="restaurant-card">
+            <h4>{{ rest.name }}</h4>
+            <p><strong>Rating You Gave:</strong> {{ rest.user_rating }}</p>
+            <!-- other restaurant info -->
+        </div>
+        {% endfor %}
+
+</body>
+</html>
