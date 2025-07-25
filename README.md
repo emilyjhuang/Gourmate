@@ -53,4 +53,4 @@ pip install -r requirements.txt
 ```
 
 
-Get Eating!:** Access Gourmate [here](https://gourmate.onrender.com/)!
+**Get Eating!:** Access Gourmate [here](https://gourmate.onrender.com/)!
