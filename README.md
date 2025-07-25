@@ -2,8 +2,7 @@
 ## TABLE OF CONTENTS
 
 1. [Description](#description)
-3. [Setup Steps](#setup-steps)
-4. [Team Members](#team-members)
+2. [Setup Steps](#setup-steps)
 
 
 ## Description
