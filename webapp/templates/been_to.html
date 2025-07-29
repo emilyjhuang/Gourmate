@@ -11,19 +11,56 @@
             <a href="{{ url_for('findrests') }}">Find Restaurants</a>
             <a href="{{ url_for('my_restaurants') }}">My Saves</a>
             <a href="{{ url_for('been_to') }}">Been To</a>
+            <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
             <a href="{{ url_for('profile') }}">My Profile</a>
             <a href="{{ url_for('account') }}">Logout</a>              
           </div>
     </nav>
 
     <h2>Restaurants You've Been To</h2>
+    <div class="restaurant-grid">
         {% for rest in been_to %}
         <div class="restaurant-card">
             <h4>{{ rest.name }}</h4>
             <p><strong>Rating You Gave:</strong> {{ rest.user_rating }}</p>
-            <!-- other restaurant info -->
         </div>
         {% endfor %}
+    </div>
+
+
+
+    <style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        background-color: #f9f9f9;
+    }
+
+
+    .restaurant-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* force 4 columns */
+        gap: 20px;
+        padding: 20px;
+        max-height: 80vh; /* allow scrolling */
+        overflow-y: auto;
+    }
+
+    .restaurant-card {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 15px;
+        background-color: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+
+
+
+
+    </style>
 
 </body>
 </html>

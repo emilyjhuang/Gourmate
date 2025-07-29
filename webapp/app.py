@@ -20,6 +20,7 @@ from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import overpy
 import time
+from ml.recommender import recommend_restaurants
 
 # --------SETUP FLASK & MONGODB--------
 from dotenv import load_dotenv
@@ -70,7 +71,7 @@ def login():
                 session["user_id"] = str(user["_id"])
                 session["username"] = username
                 session.permanent = False
-                return redirect(url_for("login"))
+                return redirect(url_for("findrests"))
             else:
                 # Incorrect password
                 flash("Invalid username or password.", "error")
@@ -534,7 +535,6 @@ def save_restaurant():
         print(f"Error saving restaurant: {e}")
         return jsonify({'success': False, 'error': 'Failed to save restaurant'}), 500
 
-
 @app.route('/mark-visited', methods=['POST'])
 def mark_visited():
     data = request.get_json()
@@ -544,11 +544,19 @@ def mark_visited():
 
     restaurant = db.saved_restaurants.find_one({"_id": ObjectId(rest_id), "user_id": user_id})
     if restaurant:
-        restaurant['user_rating'] = user_rating
-        db.been_to.insert_one(restaurant)
+        # Only store restaurant_id and rating for visited collection
+        visited_entry = {
+            "user_id": user_id,
+            "restaurant_id": ObjectId(rest_id),
+            "user_rating": float(user_rating)
+        }
+        db.visited.insert_one(visited_entry)
+
         db.saved_restaurants.delete_one({"_id": ObjectId(rest_id)})
         return jsonify(success=True)
+    
     return jsonify(success=False, error="Not found")
+
 
 @app.route("/been-to")
 def been_to():
@@ -556,6 +564,15 @@ def been_to():
         return redirect(url_for('login'))
     been_to = list(db.been_to.find({"user_id": session['user_id']}))
     return render_template("been_to.html", been_to=been_to)
+
+@app.route('/recommendations')
+def recommendations():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    recs = recommend_restaurants(user_id)
+    return render_template('recommendations.html', recommendations=recs)
 
 
 if __name__ == "__main__":

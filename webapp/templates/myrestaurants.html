@@ -9,8 +9,9 @@
     <nav>
         <div class="nav-links">
             <a href="{{ url_for('findrests') }}">Find Restaurants</a>
-            <a href="{{ url_for('my_restaurants') }}">My Restaurants</a>
+            <a href="{{ url_for('my_restaurants') }}">My Saves</a>
             <a href="{{ url_for('been_to') }}">Been To</a>
+            <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
             <a href="{{ url_for('profile') }}">My Profile</a>
             <a href="{{ url_for('account') }}">Logout</a>              
           </div>
@@ -26,7 +27,10 @@
                 <p><strong>Cuisine:</strong> {{ rest.cuisine }}</p>
                 <p><strong>Price:</strong> {{ rest.price }}</p>
                 <p><strong>Rating:</strong> {{ rest.rating }}</p>
-                <button onclick="markAsVisited('{{ rest._id }}')">I Went</button>
+                <div class="restaurant-actions">
+                    <button class="btn btn-primary" onclick="openGoogleMaps('{{ rest.address | urlencode }}')">View on Google Maps</button>
+                    <button class="btn btn-success" onclick="markAsVisited('{{ rest._id }}')">I Went</button>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -72,7 +76,33 @@
       
           document.getElementById("ratingPopup").style.display = "none";
       }
+        function openGoogleMaps(address) {
+            const url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(address);
+            window.open(url, '_blank');
+        }
       </script>
+
+      <style>
+        body{
+            overflow-y: scroll;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-info {
+            background-color: #27cfe9;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+      </style>
       
 </body>
 </html>

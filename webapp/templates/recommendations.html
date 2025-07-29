@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Saved Restaurants</title>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-links">
+            <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+            <a href="{{ url_for('my_restaurants') }}">My Saves</a>
+            <a href="{{ url_for('been_to') }}">Been To</a>
+            <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
+            <a href="{{ url_for('profile') }}">My Profile</a>
+            <a href="{{ url_for('account') }}">Logout</a>              
+          </div>
+    </nav>
+
+    <h2>Recommended for You</h2>
+    <div class="restaurant-list">
+        {% for rest in recommendations %}
+        <div class="restaurant-card">
+            <h3>{{ rest.name }}</h3>
+            <p><strong>Address:</strong> {{ rest.address }}</p>
+            <p><strong>Cuisine:</strong> {{ rest.cuisine }}</p>
+            <p><strong>Price:</strong> {{ rest.price }}</p>
+            <p><strong>Rating:</strong> {{ rest.rating }}</p>
+            <a href="https://www.google.com/maps/search/?api=1&query={{ rest.address | urlencode }}" target="_blank">
+                <button class="btn btn-primary">View on Google Maps</button>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <style>
+        h2 {
+            padding: 0;
+        }
+
+
+
+    </style>
+</body>
+</html>
