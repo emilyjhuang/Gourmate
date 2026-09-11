@@ -35,60 +35,81 @@
         </div>
     </nav>
 
+    <div class="search-page">
     <div class="location-form-container">
         <h2>Find Restaurants Between Two Locations</h2>
+        <p class="page-subtitle">Enter two locations and we'll find great spots roughly in between, matching your criteria.</p>
         <form id="locationForm">
-            <div class="geocoder-container">
-                <input type="text" id="location1" name="location1" placeholder="Enter first location" required>
-                <div id="suggestions1" class="suggestions"></div>
+
+            <div class="form-section">
+                <div class="form-section-title">Locations</div>
+                <div class="locations-row">
+                    <div class="geocoder-container">
+                        <div class="location-marker">A</div>
+                        <div class="location-input-wrap">
+                            <input type="text" id="location1" name="location1" placeholder="Starting location" autocomplete="off" required>
+                            <div id="suggestions1" class="suggestions"></div>
+                        </div>
+                    </div>
+                    <div class="geocoder-container">
+                        <div class="location-marker">B</div>
+                        <div class="location-input-wrap">
+                            <input type="text" id="location2" name="location2" placeholder="Destination" autocomplete="off" required>
+                            <div id="suggestions2" class="suggestions"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="geocoder-container">
-                <input type="text" id="location2" name="location2" placeholder="Enter second location" required>
-                <div id="suggestions2" class="suggestions"></div>
+
+            <div class="form-section">
+                <div class="form-section-title">Preferences</div>
+
+                <div class="field-group">
+                    <span class="field-label">Price Range</span>
+                    <div class="price-chips" id="priceChips">
+                        <div class="price-chip" data-value="$">$</div>
+                        <div class="price-chip" data-value="$$">$$</div>
+                        <div class="price-chip" data-value="$$$">$$$</div>
+                        <div class="price-chip" data-value="$$$$">$$$$</div>
+                    </div>
+                    <p class="field-hint">Select one or more. Leave blank for any price.</p>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="cuisine">Cuisine Type</label>
+                    <select id="cuisine" name="cuisine">
+                        <option value="None">Any</option>
+                        <option value="newamerican">American</option>
+                        <option value="asianfusion">Asian</option>
+                        <option value="japanese">Japanese</option>
+                        <option value="italian">Italian</option>
+                        <option value="chinese">Chinese</option>
+                        <option value="mexican">Mexican</option>
+                        <option value="indian">Indian</option>
+                        <option value="thai">Thai</option>
+                        <option value="french">French</option>
+                        <option value="gluten_free">Gluten-Free</option>
+                        <option value="vegetarian">Vegetarian</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="radius">Search Radius</label>
+                    <select id="radius" name="radius">
+                        <option value="2000">Any radius</option>
+                        <option value="1500">Less than 1 mile</option>
+                        <option value="1600">1 mile</option>
+                        <option value="3200">2 miles</option>
+                        <option value="4800">3 miles</option>
+                        <option value="6400">4 miles</option>
+                        <option value="8000">5 miles</option>
+                    </select>
+                </div>
             </div>
 
-            <label for="price">Select Price Range:</label>
-            <select id="price" name="price[]" multiple>
-                <option value="$">$</option>
-                <option value="$$">$$</option>
-                <option value="$$$">$$$</option>
-                <option value="$$$$">$$$$</option>
-            </select>
-
-            <label for="cuisine">Select Cuisine Type:</label>
-            <select id="cuisine" name="cuisine">
-                <option value="None">Any</option>
-                <option value="newamerican">American</option>
-                <option value="japanese">Japanese</option>
-                <option value="italian">Italian</option>
-                <option value="chinese">Chinese</option>
-                <option value="mexican">Mexican</option>
-                <option value="indian">Indian</option>
-                <option value="thai">Thai</option>
-                <option value="french">French</option>
-                <option value="gluten_free">Gluten-Free</option>
-                <option value="vegetarian">Vegetarian</option>
-            </select>
-
-            <label for="radius">Select Search Radius:</label>
-            <select id="radius" name="radius">
-                <option value="2000"> Any Radius</option>
-                <option value="1500"> Less than 1 mile</option>
-                <option value="1600">One Mile</option>
-                <option value="3200">Two Miles</option>
-                <option value="4800">Three Miles</option>
-                <option value="6400">Four Miles</option>
-                <option value="8000">Five Miles</option>
-       
-            </select>
-
-            <button type="submit">Search</button>
+            <button type="submit">Search Restaurants</button>
         </form>
-        
-        <div id="results" style="display: none;">
-            <h3>Restaurant Recommendations:</h3>
-            <ul id="restaurantList"></ul>
-        </div>
+    </div>
     </div>
 
     <footer>
@@ -101,7 +122,18 @@
     $(document).ready(function () {
         let selectedLocation1 = null;
         let selectedLocation2 = null;
-    
+        const selectedPrices = new Set();
+
+        $('.price-chip').on('click', function () {
+            const value = $(this).data('value');
+            $(this).toggleClass('selected');
+            if (selectedPrices.has(value)) {
+                selectedPrices.delete(value);
+            } else {
+                selectedPrices.add(value);
+            }
+        });
+
         function debounce(func, wait) {
             let timeout;
             return function (...args) {
@@ -159,7 +191,7 @@
         $('#location2').on('input', debounce(function () {
             fetchSuggestions(this.value, document.getElementById('suggestions2'), false);
         }, 300));
-    
+
         $('#locationForm').submit(function (event) {
           event.preventDefault();
 
@@ -168,19 +200,15 @@
             return;
         }
 
-        $('#results').hide();
-
-       //const price = $('#price').val();
-        
         const priceMap = { "$": "1", "$$": "2", "$$$": "3", "$$$$": "4" };
-        const selectedPrices = Array.from(document.getElementById("price").selectedOptions)
-            .map(opt => priceMap[opt.value])
-            .join(",");
-            
+        const priceParam = Array.from(selectedPrices).map(p => priceMap[p]).join(",");
+
         const cuisine = $('#cuisine').val();
         const radius = $('#radius').val();
 
-   
+        const submitBtn = $('#locationForm button[type="submit"]');
+        submitBtn.prop('disabled', true).text('Searching…');
+
         $.ajax({
               type: 'POST',
               url: '/results',
@@ -192,7 +220,7 @@
                   lng1: selectedLocation1.lon,
                   lat2: selectedLocation2.lat,
                   lng2: selectedLocation2.lon,
-                  price: selectedPrices,
+                  price: priceParam,
                   cuisine: cuisine,
                   radius: radius
               }),
@@ -202,11 +230,13 @@
                       window.location.href = response.redirect_url;
                   } else {
                       alert('Error: ' + (response.error || 'Unknown error occurred'));
+                      submitBtn.prop('disabled', false).text('Search Restaurants');
                   }
               },
               error: function (xhr, status, error) {
                   console.error('Error:', error);
                   alert('An error occurred while processing your request. Please try again.');
+                  submitBtn.prop('disabled', false).text('Search Restaurants');
               },
           });
       });
