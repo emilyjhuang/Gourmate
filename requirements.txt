@@ -6,7 +6,6 @@ certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
 coverage==7.6.9
-cython
 dnspython==2.7.0
 feedparser==6.0.11
 Flask==3.1.0
@@ -34,7 +33,6 @@ reader==3.16
 requests==2.32.3
 scipy==1.14.1
 scikit-learn==1.5.2
-scikit-surprise==1.1.4
 sgmllib3k==1.0.0
 six==1.16.0
 soupsieve==2.6
