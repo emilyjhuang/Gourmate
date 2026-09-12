@@ -25,8 +25,12 @@
                 <h3>{{ rest.name }}</h3>
                 <p><strong>Address:</strong> {{ rest.address }}</p>
                 <p><strong>Cuisine:</strong> {{ rest.cuisine }}</p>
+                {% if rest.price and rest.price != "N/A" %}
                 <p><strong>Price:</strong> {{ rest.price }}</p>
+                {% endif %}
+                {% if rest.rating and rest.rating != "N/A" %}
                 <p><strong>Rating:</strong> {{ rest.rating }}</p>
+                {% endif %}
                 <div class="restaurant-actions">
                     <button class="btn btn-primary" onclick="openGoogleMaps('{{ rest.address | urlencode }}')">View on Google Maps</button>
                     <button class="btn btn-success" onclick="markAsVisited('{{ rest._id }}')">I Went</button>

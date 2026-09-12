@@ -10,7 +10,6 @@ from flask import (
 )
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-import requests  # Add this line
 from datetime import datetime
 import os
 import bcrypt
@@ -19,6 +18,7 @@ import json
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import overpy
+import urllib.request
 import time
 from ml.recommender import recommend_restaurants
 
@@ -32,9 +32,6 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 
 MONGO_DBNAME = os.getenv("MONGO_DBNAME", "Gourmate")
-
-#yelp
-YELP_API_Key = os.getenv('YELP_API_Key')
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)  # create MongoDB client
@@ -122,7 +119,6 @@ def findrests():
 
             lat1, lng1 = data.get("lat1"), data.get("lng1")
             lat2, lng2 = data.get("lat2"), data.get("lng2")
-            price = data.get("price")
             cuisine = data.get("cuisine")
             radius = int(data.get("radius", 2000))
 
@@ -133,9 +129,7 @@ def findrests():
             mid_lat, mid_lng = (float(lat1) + float(lat2)) / 2, (float(lng1) + float(lng2)) / 2
 
             # Fetch restaurants using Overpass API
-            restaurants = get_restaurants(mid_lat, mid_lng, price, cuisine, radius)
-            print("Yelp API response data:", json.dumps(data, indent=2))
-
+            restaurants = get_restaurants(mid_lat, mid_lng, cuisine, radius)
 
             return render_template("results.html", restaurants=restaurants, mid_lat=mid_lat, mid_lng=mid_lng)
         
@@ -168,48 +162,89 @@ def logout():
     return redirect(url_for('login'))
 
 
-def get_restaurants(mid_lat, mid_lng, price=None, cuisine=None, radius=2000):
-    url = "https://api.yelp.com/v3/businesses/search"
-    headers = { "Authorization": f"Bearer {YELP_API_Key}"}
+# Yelp cuisine slugs don't line up 1:1 with OSM's freeform `cuisine` tag values;
+# map the ones that differ and fall back to the raw slug for the rest.
+OSM_CUISINE_MAP = {
+    "newamerican": "american",
+    "asianfusion": "asian",
+    "gluten_free": "gluten_free",
+}
 
-    params = {
-        "latitude": mid_lat,
-        "longitude": mid_lng,
-        "categories": "restaurants",
-        "radius": radius,
-        "limit": 5,
-        "sort_by": "best_match"
-    }
 
-    if price:
-        params["price"] = price
+def query_overpass(query):
+    # overpy's default urlopen() sends Python's stock User-Agent, which
+    # Overpass's server rejects with 406 - send the request ourselves instead.
+    req = urllib.request.Request(
+        "https://overpass-api.de/api/interpreter",
+        data=query.encode("utf-8"),
+        headers={"User-Agent": "Gourmate/1.0 (restaurant finder web app)"},
+    )
+    with urllib.request.urlopen(req, timeout=25) as f:
+        return overpy.Overpass().parse_json(f.read())
 
-    if cuisine and cuisine.strip():
-        params["categories"] = cuisine.strip().lower() 
-    else:
-        params["categories"] = "restaurants"
-    
+
+def get_restaurants(mid_lat, mid_lng, cuisine=None, radius=2000):
+    """Search for restaurants near a point using OpenStreetMap's free Overpass API."""
+    cuisine_filter = ""
+    if cuisine and cuisine.strip() and cuisine.strip().lower() != "none":
+        osm_cuisine = OSM_CUISINE_MAP.get(cuisine.strip().lower(), cuisine.strip().lower())
+        cuisine_filter = f'["cuisine"~"{osm_cuisine}",i]'
+
+    query = f"""
+    [out:json][timeout:25];
+    (
+        node["amenity"="restaurant"]{cuisine_filter}(around:{radius},{mid_lat},{mid_lng});
+        way["amenity"="restaurant"]{cuisine_filter}(around:{radius},{mid_lat},{mid_lng});
+    );
+    out center;
+    """
+
     try:
-        response = requests.get(url, headers=headers, params=params, timeout = 10)
-        response.raise_for_status()
-        data = response.json()
-    except requests.exceptions.RequestException as e:
-        print("Error fetching data from API:", e)
+        result = query_overpass(query)
+    except Exception as e:
+        print("Error querying OpenStreetMap:", e)
         return []
-    
+
+    midpoint = (mid_lat, mid_lng)
+
+    def to_entry(tags, lat, lon):
+        name = tags.get("name")
+        if not name:
+            return None
+        street = " ".join(part for part in [tags.get("addr:housenumber", ""), tags.get("addr:street", "")] if part)
+        address = ", ".join(part for part in [street, tags.get("addr:city", "")] if part) or "Address not available"
+        cuisines = [c.strip().replace("_", " ").title() for c in tags.get("cuisine", "").split(";") if c.strip()]
+        website = tags.get("website") or tags.get("contact:website")
+        return {
+            "name": name,
+            "address": address,
+            "categories": ", ".join(cuisines) if cuisines else "Restaurant",
+            "lat": lat,
+            "lon": lon,
+            "price": "N/A",
+            "rating": "N/A",
+            "url": website or f"https://www.google.com/maps/search/?api=1&query={lat},{lon}",
+            "distance": geodesic(midpoint, (lat, lon)).meters,
+        }
+
     restaurants = []
-    for biz in data.get("businesses", []):
-        restaurants.append({
-            "name": biz.get("name", "Unknown"),
-            "address": ", ".join(biz.get("location", {}).get("display_address", [])),
-            "categories": ", ".join([c["title"] for c in biz.get("categories", [])]),
-            "lat": biz.get("coordinates", {}).get("latitude"),
-            "lon": biz.get("coordinates", {}).get("longitude"),
-            "price": biz.get("price", "N/A"),
-            "rating": biz.get("rating", "N/A"),
-            "url": biz.get("url", "")
-        })
-    return restaurants
+    for node in result.nodes:
+        entry = to_entry(node.tags, float(node.lat), float(node.lon))
+        if entry:
+            restaurants.append(entry)
+
+    for way in result.ways:
+        if way.center_lat is None or way.center_lon is None:
+            continue
+        entry = to_entry(way.tags, float(way.center_lat), float(way.center_lon))
+        if entry:
+            restaurants.append(entry)
+
+    restaurants.sort(key=lambda r: r["distance"])
+    for r in restaurants:
+        del r["distance"]
+
+    return restaurants[:15]
 
 
 @app.route("/myrestaurants")
@@ -242,10 +277,9 @@ def results():
 
             lat1, lng1 = data.get("lat1"), data.get("lng1")
             lat2, lng2 = data.get("lat2"), data.get("lng2")
-            price = data.get("price")
             cuisine = data.get("cuisine")
             radius = int(data.get("radius", 2000))
-        
+
             # Validate and convert coordinates
             try:
                 lat1, lng1 = float(lat1), float(lng1)
@@ -258,7 +292,7 @@ def results():
 
             mid_lat, mid_lng = (lat1 + lat2) / 2, (lng1 + lng2) / 2
 
-            restaurants = get_restaurants(mid_lat, mid_lng, price, cuisine, radius)
+            restaurants = get_restaurants(mid_lat, mid_lng, cuisine, radius)
 
             # Store data in session for GET request - ensure all values are JSON serializable
             session['restaurants'] = restaurants
@@ -415,8 +449,6 @@ def find_midpoint(loc1, loc2):
 
 def search_restaurants(midpoint, radius=1000):
     """Search for restaurants near the midpoint using OpenStreetMap."""
-    api = overpy.Overpass()
-    
     query = f"""
     [out:json][timeout:25];
     (
@@ -427,9 +459,9 @@ def search_restaurants(midpoint, radius=1000):
     >;
     out skel qt;
     """
-    
+
     try:
-        result = api.query(query)
+        result = query_overpass(query)
         restaurants = []
         
         for node in result.nodes:
@@ -509,7 +541,7 @@ def save_restaurant():
             'user_id': session['user_id'],
             'name': data.get('name'),
             'address': data.get('address'),
-            'cuisine': data.get('cuisine'),
+            'cuisine': data.get('categories') or data.get('cuisine'),
             'price': data.get('price'),
             'rating': data.get('rating'),
             'url': data.get('url'),

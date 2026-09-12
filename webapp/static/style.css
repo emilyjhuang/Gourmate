@@ -617,44 +617,6 @@ button:hover {
     background-color: #f9fafb;
 }
 
-/* Price range chips */
-.price-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-}
-
-.price-chip {
-    flex: 1 1 60px;
-    padding: 10px 0;
-    text-align: center;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background-color: #fff;
-    color: #374151;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.15s ease;
-}
-
-.price-chip:hover {
-    border-color: #9B2D20;
-}
-
-.price-chip.selected {
-    background-color: #9B2D20;
-    border-color: #9B2D20;
-    color: #fff;
-}
-
-.field-hint {
-    font-size: 12.5px;
-    color: #9ca3af;
-    margin-top: 0.4rem;
-}
-
 
 /* MY RESTS */
 .restaurant-list {

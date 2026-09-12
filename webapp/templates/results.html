@@ -145,11 +145,9 @@
                 <h4>${restaurant.name}</h4>
                 <p><strong>Address:</strong> ${restaurant.address}</p>
                 <p><strong>Cuisine:</strong> ${restaurant.categories}</p>
-                <p><strong>Price:</strong> ${restaurant.price}</p>
-                <p><strong>Rating:</strong> ${restaurant.rating}</p>
-                <a href="${restaurant.url}" class="btn btn-primary" target="_blank">View on Yelp</a>
+                <a href="${restaurant.url}" class="btn btn-primary" target="_blank">More Info</a>
                 <button onclick="saveRestaurantDirect(${index})" class="btn btn-secondary">Save Restaurant</button>
-                <a href="https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lon}" 
+                <a href="https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lon}"
                    class="btn btn-info" target="_blank">Show on Google Map</a>
             `;
     
