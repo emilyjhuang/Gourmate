@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Saved Restaurants</title>
+    <title>My Saves - Gourmate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link href="/static/style.css" rel="stylesheet">
 </head>
 <body>
     <nav>
-        <div class="nav-links">
-            <a href="{{ url_for('findrests') }}">Find Restaurants</a>
-            <a href="{{ url_for('my_restaurants') }}">My Saves</a>
-            <a href="{{ url_for('been_to') }}">Been To</a>
-            <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
-            <a href="{{ url_for('profile') }}">My Profile</a>
-            <a href="{{ url_for('account') }}">Logout</a>              
-          </div>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('findrests') }}">Gourmate</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+                <a href="{{ url_for('my_restaurants') }}">My Saves</a>
+                <a href="{{ url_for('been_to') }}">Been To</a>
+                <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
+                <a href="{{ url_for('profile') }}">My Profile</a>
+                <a href="{{ url_for('account') }}">Logout</a>
+            </div>
+        </div>
     </nav>
 
+    <div class="page-content">
     <h2>Saved Restaurants</h2>
     {% if saved_restaurants %}
         <div class="restaurant-list">
@@ -33,15 +42,16 @@
                 {% endif %}
                 <div class="restaurant-actions">
                     <button class="btn btn-primary" onclick="openGoogleMaps('{{ rest.address | urlencode }}')">View on Google Maps</button>
-                    <button class="btn btn-success" onclick="markAsVisited('{{ rest._id }}')">I Went</button>
+                    <button class="btn btn-secondary" onclick="markAsVisited('{{ rest._id }}')">I Went</button>
                 </div>
             </div>
             {% endfor %}
         </div>
-    
+
     {% else %}
         <p>No saved restaurants yet.</p>
     {% endif %}
+    </div>
 
     <div id="ratingPopup" style="display:none;">
         <label>Rate this restaurant (1-5):</label>
@@ -87,24 +97,45 @@
       </script>
 
       <style>
-        body{
+        body {
             overflow-y: scroll;
+            display: block;
         }
+
+        .page-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 60px;
+            box-sizing: border-box;
+        }
+
+        .page-content h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
         .btn-primary {
-            background-color: #007bff;
+            background-color: var(--color-primary);
             color: white;
         }
-        .btn-info {
-            background-color: #27cfe9;
-            color: white;
-        }
+
         .btn-secondary {
-            background-color: #6c757d;
+            background-color: var(--color-ink);
             color: white;
         }
 
         .btn:hover {
-            opacity: 0.8;
+            opacity: 0.85;
         }
       </style>
       

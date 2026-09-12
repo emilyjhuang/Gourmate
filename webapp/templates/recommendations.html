@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Saved Restaurants</title>
+    <title>Recommendations - Gourmate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link href="/static/style.css" rel="stylesheet">
 </head>
 <body>
     <nav>
-        <div class="nav-links">
-            <a href="{{ url_for('findrests') }}">Find Restaurants</a>
-            <a href="{{ url_for('my_restaurants') }}">My Saves</a>
-            <a href="{{ url_for('been_to') }}">Been To</a>
-            <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
-            <a href="{{ url_for('profile') }}">My Profile</a>
-            <a href="{{ url_for('account') }}">Logout</a>              
-          </div>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('findrests') }}">Gourmate</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+                <a href="{{ url_for('my_restaurants') }}">My Saves</a>
+                <a href="{{ url_for('been_to') }}">Been To</a>
+                <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
+                <a href="{{ url_for('profile') }}">My Profile</a>
+                <a href="{{ url_for('account') }}">Logout</a>
+            </div>
+        </div>
     </nav>
 
+    <div class="page-content">
     <h2>Recommended for You</h2>
     <div class="restaurant-list">
         {% for rest in recommendations %}
@@ -32,14 +41,31 @@
         </div>
         {% endfor %}
     </div>
+    </div>
 
     <style>
-        h2 {
-            padding: 0;
+        body {
+            display: block;
+            margin: 0;
         }
 
+        .page-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 60px;
+            box-sizing: border-box;
+        }
 
+        .page-content h2 {
+            margin-bottom: 1.5rem;
+        }
 
+        .restaurant-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
     </style>
 </body>
 </html>

@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Saved Restaurants</title>
+    <title>Been To - Gourmate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link href="/static/style.css" rel="stylesheet">
 </head>
 <body>
     <nav>
-        <div class="nav-links">
-            <a href="{{ url_for('findrests') }}">Find Restaurants</a>
-            <a href="{{ url_for('my_restaurants') }}">My Saves</a>
-            <a href="{{ url_for('been_to') }}">Been To</a>
-            <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
-            <a href="{{ url_for('profile') }}">My Profile</a>
-            <a href="{{ url_for('account') }}">Logout</a>              
-          </div>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('findrests') }}">Gourmate</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('findrests') }}">Find Restaurants</a>
+                <a href="{{ url_for('my_restaurants') }}">My Saves</a>
+                <a href="{{ url_for('been_to') }}">Been To</a>
+                <!-- <a href="{{ url_for('recommendations') }}">For You</a>-->
+                <a href="{{ url_for('profile') }}">My Profile</a>
+                <a href="{{ url_for('account') }}">Logout</a>
+            </div>
+        </div>
     </nav>
 
+    <div class="page-content">
     <h2>Restaurants You've Been To</h2>
     <div class="restaurant-grid">
         {% for rest in been_to %}
@@ -26,34 +35,31 @@
         </div>
         {% endfor %}
     </div>
-
-
+    </div>
 
     <style>
     body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        display: block;
         margin: 0;
-        background-color: #f9f9f9;
+    }
+
+    .page-content {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 100px 20px 60px;
+        box-sizing: border-box;
+    }
+
+    .page-content h2 {
+        margin-bottom: 1.5rem;
     }
 
 
     .restaurant-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr); /* force 4 columns */
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 20px;
-        padding: 20px;
-        max-height: 80vh; /* allow scrolling */
-        overflow-y: auto;
-    }
-
-    .restaurant-card {
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        padding: 15px;
-        background-color: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
 

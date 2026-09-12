@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Restaurant Finder</title>
+    <title>Find Restaurants - Gourmate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link href="/static/style.css" rel="stylesheet">
-    
-    <!-- Add Leaflet CSS and JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Add Leaflet geocoding plugin -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -22,7 +16,7 @@
     <nav>
         <div class="nav-container">
             <div class="logo">
-                <a href="index.html">NYC Restaurant Finder</a>
+                <a href="{{ url_for('findrests') }}">Gourmate</a>
             </div>
             <div class="nav-links">
               <a href="{{ url_for('findrests') }}">Find Restaurants</a>
@@ -102,7 +96,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 NYC Restaurant Finder. All rights reserved.</p>
+        <p>&copy; 2025 Gourmate. All rights reserved.</p>
     </footer>
     
 </body>
