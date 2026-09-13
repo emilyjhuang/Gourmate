@@ -32,135 +32,127 @@
         </div>
     </nav>
 
-    <div class="container">
+    <div class="page-content">
         <h2>Restaurant Recommendations</h2>
-        
-        <!-- Map Container -->
-        <div id="map" style="height: 500px; margin-bottom: 20px;"></div>
 
-        <!-- Restaurant Card Carousel -->
-        <div class="carousel-container">
-            <button id="prev-btn" class="carousel-nav">←</button>
-
-            <div id="restaurant-card" class="restaurant-card">
+        <div class="results-layout">
+            <div class="map-pane">
+                <div id="map"></div>
             </div>
-
-            <button id="next-btn" class="carousel-nav">→</button>
+            <div class="list-pane" id="restaurant-list"></div>
         </div>
-        <!-- <div class="restaurant-list">
-            {% for restaurant in restaurants %}
-            <div class="restaurant-card">
-                <h4>{{ restaurant.name }}</h4>
-                <p><strong>Address:</strong> {{ restaurant.address }}</p>
-                <p><strong>Cuisine:</strong> {{ restaurant.categories }}</p>
-                <p><strong>Price:</strong> {{ restaurant.price }}</p>
-                <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
-
-                <a href="{{ restaurant.url }}" class="btn btn-primary" target="_blank">
-                    View on Yelp
-                </a>
-
-                <button onclick="saveRestaurant(this)" data-name="{{ restaurant.name }}" data-address="{{ restaurant.address }}"
-                        data-cuisine="{{ restaurant.categories }}" data-price="{{ restaurant.price }}"
-                        data-rating="{{ restaurant.rating }}" data-url="{{ restaurant.url }}">
-                    Save Restaurant
-                </button>
-
-                <a href="https://www.google.com/maps/search/?api=1&query={{ restaurant.lat }},{{ restaurant.lon }}" 
-                class="btn btn-info" target="_blank">
-                    Show on Map
-                </a>
-            </div>
-            {% endfor %}
-
-        </div> -->
     </div>
 
     <script>
         let map;
         let restaurantMarkers = [];
-        let currentIndex = 0;
         let restaurantData = [];
-    
+
         document.addEventListener("DOMContentLoaded", function () {
             // Initialize map
             const midLat = {{ mid_lat }};
             const midLng = {{ mid_lng }};
-            
+
             map = L.map('map').setView([midLat, midLng], 14);
-            
+
             // Add tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
-    
+
             // Add location markers
             const locationA = {{ location1|tojson }};
             const locationB = {{ location2|tojson }};
             L.marker([locationA.lat, locationA.lng]).bindPopup("Starting Location").addTo(map);
             L.marker([locationB.lat, locationB.lng]).bindPopup("Destination Location").addTo(map);
-    
+
             // Load restaurant data
             restaurantData = {{ restaurants|tojson|safe }};
-    
-            // Add markers
+
+            // Add markers, wiring hover -> focus the matching list card
             restaurantData.forEach((restaurant, i) => {
                 const marker = L.marker([restaurant.lat, restaurant.lon])
                     .bindPopup(`<strong>${restaurant.name}</strong>`)
                     .addTo(map);
-    
+
+                marker.on('mouseover', () => focusRestaurant(i));
+                marker.on('mouseout', clearFocus);
+
                 restaurantMarkers.push({ marker });
             });
-    
-            // Render the first restaurant card
-            updateCard(currentIndex);
-    
-            // Button listeners
-            document.getElementById("prev-btn").addEventListener("click", () => {
-                currentIndex = (currentIndex - 1 + restaurantData.length) % restaurantData.length;
-                updateCard(currentIndex);
-            });
-    
-            document.getElementById("next-btn").addEventListener("click", () => {
-                currentIndex = (currentIndex + 1) % restaurantData.length;
-                updateCard(currentIndex);
-            });
-    
+
+            renderList();
+
             // Auto-fit map to bounds
             const bounds = L.latLngBounds([
                 [locationA.lat, locationA.lng],
                 [locationB.lat, locationB.lng],
             ]);
-    
+
             restaurantData.forEach(r => {
                 if (r.lat && r.lon) bounds.extend([r.lat, r.lon]);
             });
-    
+
             map.fitBounds(bounds, { padding: [50, 50] });
         });
-    
-        function updateCard(index) {
-            const restaurant = restaurantData[index];
-            const card = document.getElementById("restaurant-card");
-    
-            card.innerHTML = `
-                <h4>${restaurant.name}</h4>
-                <p><strong>Address:</strong> ${restaurant.address}</p>
-                <p><strong>Cuisine:</strong> ${restaurant.categories}</p>
-                <a href="${restaurant.url}" class="btn btn-primary" target="_blank">More Info</a>
-                <button onclick="saveRestaurantDirect(${index})" class="btn btn-secondary">Save Restaurant</button>
-                <a href="https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lon}"
-                   class="btn btn-info" target="_blank">Show on Google Map</a>
-            `;
-    
-            // Highlight marker
-            map.setView([restaurant.lat, restaurant.lon], 16);
-            restaurantMarkers.forEach(m => m.marker.setOpacity(0.4));
-            restaurantMarkers[index].marker.setOpacity(1);
-            restaurantMarkers[index].marker.openPopup();
+
+        function renderList() {
+            const list = document.getElementById("restaurant-list");
+
+            if (restaurantData.length === 0) {
+                list.innerHTML = `<p>No restaurants found. Try a wider radius or a different cuisine.</p>`;
+                return;
+            }
+
+            list.innerHTML = restaurantData.map((restaurant, index) => {
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lon}`;
+                const websiteButton = restaurant.website
+                    ? `<a href="${restaurant.website}" class="btn btn-primary" target="_blank">More Info</a>`
+                    : '';
+
+                return `
+                    <div class="restaurant-card" data-index="${index}">
+                        <h4>${restaurant.name}</h4>
+                        <p><strong>Address:</strong> ${restaurant.address}</p>
+                        <p><strong>Cuisine:</strong> ${restaurant.categories}</p>
+                        ${websiteButton}
+                        <button onclick="saveRestaurantDirect(${index})" class="btn btn-secondary">Save Restaurant</button>
+                        <a href="${mapsUrl}" class="btn btn-info" target="_blank">Show on Google Map</a>
+                    </div>
+                `;
+            }).join('');
+
+            list.querySelectorAll('.restaurant-card').forEach(card => {
+                const index = Number(card.dataset.index);
+                card.addEventListener('mouseenter', () => focusRestaurant(index));
+                card.addEventListener('mouseleave', clearFocus);
+            });
         }
-    
+
+        function focusRestaurant(index) {
+            restaurantMarkers.forEach((m, i) => {
+                m.marker.setOpacity(i === index ? 1 : 0.35);
+            });
+            restaurantMarkers[index].marker.openPopup();
+
+            document.querySelectorAll('.restaurant-card').forEach(card => {
+                const isMatch = Number(card.dataset.index) === index;
+                card.classList.toggle('focused', isMatch);
+                card.classList.toggle('dimmed', !isMatch);
+            });
+
+            const card = document.querySelector(`.restaurant-card[data-index="${index}"]`);
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function clearFocus() {
+            restaurantMarkers.forEach(m => m.marker.setOpacity(1));
+            document.querySelectorAll('.restaurant-card').forEach(card => {
+                card.classList.remove('focused', 'dimmed');
+            });
+        }
+
         function saveRestaurantDirect(index) {
             const restaurant = restaurantData[index];
             fetch('/save-restaurant', {
@@ -180,52 +172,93 @@
 
     <style>
 
-        html, body{
-            overflow-y: scroll;
+        html, body {
+            overflow-y: auto;
             margin: 0;
             padding: 0;
-            min-height: 200vh;
         }
 
-        .container {
+        .page-content {
             width: 100%;
-            max-width: 100%;
-            padding: 50px 40px 40px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 100px 24px 40px;
             box-sizing: border-box;
-            min-height: 100vh;
-        }
-        .container h2 {
-            margin-top: 0;
-            padding-top: 0;
         }
 
-        .restaurant-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-            padding-bottom: 40px;
-            justify-content: center;
+        .page-content h2 {
+            margin-bottom: 1.25rem;
+        }
+
+        .results-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .map-pane {
+            flex: 1 1 50%;
+            position: sticky;
+            top: calc(var(--nav-height) + 20px);
+            height: calc(100vh - var(--nav-height) - 40px);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(36, 32, 30, 0.08);
+        }
+
+        #map {
             width: 100%;
-            box-sizing: border-box;
+            height: 100%;
+        }
+
+        .list-pane {
+            flex: 1 1 50%;
+            max-height: calc(100vh - var(--nav-height) - 40px);
+            overflow-y: auto;
+            display: flex;
             flex-direction: column;
-            flex-wrap: wrap;
-            align-items: center;
+            gap: 16px;
+            padding-right: 4px;
         }
-        
+
+        @media (max-width: 900px) {
+            .results-layout {
+                flex-direction: column;
+            }
+
+            .map-pane {
+                position: static;
+                width: 100%;
+                height: 360px;
+            }
+
+            .list-pane {
+                max-height: none;
+                overflow-y: visible;
+                width: 100%;
+            }
+        }
 
         .restaurant-card {
-            width: 300px;
             border: 1px solid var(--color-border);
             background: var(--color-surface);
             padding: 20px;
             border-radius: var(--radius-lg);
             box-shadow: 0 4px 16px rgba(36, 32, 30, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
         }
 
         .restaurant-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-2px);
+        }
+
+        .restaurant-card.focused {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+        }
+
+        .restaurant-card.dimmed {
+            opacity: 0.5;
         }
 
         .restaurant-card h4 {
@@ -240,11 +273,6 @@
             font-size: 14px;
             color: var(--color-muted);
         }
-
-        .restaurant-actions {
-            margin-top: 10px;
-        }
-
 
         .btn {
             width: 100%;
@@ -280,62 +308,6 @@
         .btn:hover {
             opacity: 0.85;
         }
-        
-        .restaurant-popup {
-            max-width: 250px;
-        }
-        
-        .restaurant-popup h4 {
-            margin: 0 0 10px 0;
-        }
-        
-        .restaurant-popup p {
-            margin: 5px 0;
-        }
-
-        body::after {
-            content: '';
-            display: block;
-            height: 200px; /* or however much extra scroll room you want */
-        }
-
-        /* restuarnt carousal */
-        .carousel-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .carousel-nav {
-            font-size: 18px;
-            padding: 6px 10px;
-            background-color: var(--color-primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: background 0.2s ease;
-            height: 40px;
-            width: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .carousel-nav:hover {
-            background-color: var(--color-primary-dark);
-        }
-
-        #restaurant-card {
-            width: 360px;
-            max-width: 90vw;
-        }
-
-
-
-
     </style>
 </body>
 </html>

@@ -223,7 +223,7 @@ def get_restaurants(mid_lat, mid_lng, cuisine=None, radius=2000):
             "lon": lon,
             "price": "N/A",
             "rating": "N/A",
-            "url": website or f"https://www.google.com/maps/search/?api=1&query={lat},{lon}",
+            "website": website,
             "distance": geodesic(midpoint, (lat, lon)).meters,
         }
 
@@ -544,7 +544,7 @@ def save_restaurant():
             'cuisine': data.get('categories') or data.get('cuisine'),
             'price': data.get('price'),
             'rating': data.get('rating'),
-            'url': data.get('url'),
+            'website': data.get('website'),
             'saved_at': datetime.now()
         }
         
