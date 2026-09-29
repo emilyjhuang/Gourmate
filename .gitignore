@@ -1,0 +1,20 @@
+# Environment / secrets
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Editor / tooling junk
+tempCodeRunnerFile.python
+.DS_Store
+
+# Flask / misc
+instance/
+.pytest_cache/
